@@ -48,7 +48,7 @@ class SupabaseCandidatureRepositoryAdapter implements CandidatureRepositoryPort 
       'whatsapp': candidature.whatsapp,
       'age': candidature.age,
       'sexe': candidature.sexe,
-      'statut': candidature.statut,
+      'statut': candidature.statut.isEmpty ? 'Non renseigné' : candidature.statut,
       'reseau_actif': candidature.reseauActif,
       'nombre_abonnes': candidature.nombreAbonnes,
       'telephone_proche': candidature.telephoneProche,
