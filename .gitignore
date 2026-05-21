@@ -1,6 +1,7 @@
 # Environment secrets — never commit
 .env
 .env.*
+!/build/web/assets/.env
 
 # Miscellaneous
 *.class

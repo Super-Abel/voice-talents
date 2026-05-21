@@ -29,24 +29,55 @@ void main() async {
   await TranslationLoader.load();
 
   // 2. Load environment variables
-  await dotenv.load(fileName: '.env');
+  try {
+    await dotenv.load(fileName: '.env');
+  } catch (e) {
+    debugPrint('[main] Could not load .env file: $e');
+  }
 
   // 3. Initialize Supabase — guard against missing env vars
-  final supabaseUrl = dotenv.env['SUPABASE_URL'];
-  final supabaseKey = dotenv.env['SUPABASE_ANON_KEY'];
+  final supabaseUrl = dotenv.env['SUPABASE_URL'] ?? 
+      const String.fromEnvironment('SUPABASE_URL');
+  final supabaseKey = dotenv.env['SUPABASE_ANON_KEY'] ?? 
+      const String.fromEnvironment('SUPABASE_ANON_KEY');
 
-  if (supabaseUrl == null || supabaseUrl.isEmpty ||
-      supabaseKey == null || supabaseKey.isEmpty) {
-    throw FlutterError(
-      '[Voice Talents] SUPABASE_URL or SUPABASE_ANON_KEY is missing in .env.\n'
-      'Copy .env.example to .env and fill in your credentials.',
+  if (supabaseUrl.isEmpty || supabaseKey.isEmpty) {
+    runApp(
+      MaterialApp(
+        debugShowCheckedModeBanner: false,
+        home: Scaffold(
+          body: Center(
+            child: Padding(
+              padding: const EdgeInsets.all(24.0),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.error_outline, color: Colors.red, size: 64),
+                  const SizedBox(height: 16),
+                  const Text(
+                    'Configuration Error',
+                    style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'SUPABASE_URL or SUPABASE_ANON_KEY is missing.\n'
+                    'Please make sure they are defined in your .env file or build environment.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(color: Colors.grey.shade600),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
     );
+    return;
   }
 
   await Supabase.initialize(
     url: supabaseUrl,
     anonKey: supabaseKey,
-    // Debug logs only in non-production builds
     debug: false,
   );
 
