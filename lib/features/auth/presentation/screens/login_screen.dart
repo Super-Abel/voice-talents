@@ -5,6 +5,7 @@ import '../../../../core/theme/design_system.dart';
 import '../../providers/auth_provider.dart';
 import '../../../candidature/presentation/widgets/custom_text_field.dart';
 import '../../../../core/localization/translation_provider.dart';
+import '../../../../core/utils/dialogs.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
@@ -21,30 +22,20 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   Future<void> _login() async {
     final trans = ref.read(translationProvider);
     if (_email.isEmpty || _password.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(trans.translate('err_fill_all_fields')),
-          backgroundColor: AppDesignSystem.error,
-        ),
-      );
+      showErrorDialog(context, message: trans.translate('err_fill_all_fields'));
       return;
     }
 
     setState(() => _isLoading = true);
     final success = await ref.read(authProvider.notifier).login(_email.trim(), _password);
-    
+
     if (!mounted) return;
     setState(() => _isLoading = false);
 
     if (success) {
       context.go('/admin');
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(trans.translate('err_incorrect_credentials')),
-          backgroundColor: AppDesignSystem.error,
-        ),
-      );
+      showErrorDialog(context, message: trans.translate('err_incorrect_credentials'));
     }
   }
 

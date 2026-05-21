@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/assets/app_assets.dart';
+import '../../../../core/utils/dialogs.dart';
 
 import '../../../../core/theme/design_system.dart';
 import '../../../../core/utils/validators.dart';
@@ -81,36 +82,14 @@ class _CandidatureScreenState extends ConsumerState<CandidatureScreen> {
     if (result.isSuccess) {
       context.go('/success?id=${result.applicationId}');
     } else {
-      ScaffoldMessenger.of(context)
-        ..clearSnackBars()
-        ..showSnackBar(
-          SnackBar(
-            content: Row(
-              children: [
-                const Icon(Icons.error_outline_rounded,
-                    color: Colors.white, size: 18),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Text(
-                    ref.read(translationProvider).translate(result.errorMessage ?? AppKeys.errOccurred),
-                    style: const TextStyle(color: Colors.white),
-                  ),
-                ),
-              ],
-            ),
-            backgroundColor: AppDesignSystem.error,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-              borderRadius: AppDesignSystem.borderSmall,
-            ),
-            duration: const Duration(seconds: 6),
-            action: SnackBarAction(
-              label: ref.read(translationProvider).translate(AppKeys.btnRetry),
-              textColor: AppDesignSystem.accentYellow,
-              onPressed: _submitForm,
-            ),
-          ),
-        );
+      final trans = ref.read(translationProvider);
+      showErrorDialog(
+        context,
+        message: trans.translate(result.errorMessage ?? AppKeys.errOccurred),
+        onRetry: _submitForm,
+        retryLabel: trans.translate(AppKeys.btnRetry),
+        cancelLabel: trans.translate('btn_cancel'),
+      );
     }
   }
 
