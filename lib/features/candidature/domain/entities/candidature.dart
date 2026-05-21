@@ -16,6 +16,7 @@ class Candidature {
   final String statut;
   final String reseauActif;
   final String nombreAbonnes;
+  final String? lienReseau;
   final DomainFile? video;
   final DomainFile? photo;
   final String? videoUrl;
@@ -38,6 +39,7 @@ class Candidature {
     this.statut = '',
     this.reseauActif = '',
     this.nombreAbonnes = '',
+    this.lienReseau,
     this.video,
     this.photo,
     this.videoUrl,
@@ -63,6 +65,7 @@ class Candidature {
     String? statut,
     String? reseauActif,
     String? nombreAbonnes,
+    String? lienReseau,
     // Use Object? + default sentinel to allow setting to null
     Object? video = _sentinel,
     Object? photo = _sentinel,
@@ -86,6 +89,7 @@ class Candidature {
       statut: statut ?? this.statut,
       reseauActif: reseauActif ?? this.reseauActif,
       nombreAbonnes: nombreAbonnes ?? this.nombreAbonnes,
+      lienReseau: lienReseau ?? this.lienReseau,
       // Sentinel pattern: if caller passed null explicitly → null; else keep existing
       video: identical(video, _sentinel) ? this.video : video as DomainFile?,
       photo: identical(photo, _sentinel) ? this.photo : photo as DomainFile?,

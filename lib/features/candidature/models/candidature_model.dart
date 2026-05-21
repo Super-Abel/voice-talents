@@ -13,6 +13,7 @@ class CandidatureModel {
   final String statut;
   final String reseauActif;
   final String nombreAbonnes;
+  final String? lienReseau;
   final PlatformFile? video;
   final PlatformFile? photo;
   final String? videoUrl;
@@ -34,6 +35,7 @@ class CandidatureModel {
     this.statut = '',
     this.reseauActif = '',
     this.nombreAbonnes = '',
+    this.lienReseau,
     this.video,
     this.photo,
     this.videoUrl,
@@ -56,6 +58,7 @@ class CandidatureModel {
     String? statut,
     String? reseauActif,
     String? nombreAbonnes,
+    String? lienReseau,
     PlatformFile? video,
     PlatformFile? photo,
     String? videoUrl,
@@ -77,6 +80,7 @@ class CandidatureModel {
       statut: statut ?? this.statut,
       reseauActif: reseauActif ?? this.reseauActif,
       nombreAbonnes: nombreAbonnes ?? this.nombreAbonnes,
+      lienReseau: lienReseau ?? this.lienReseau,
       video: video ?? this.video,
       photo: photo ?? this.photo,
       videoUrl: videoUrl ?? this.videoUrl,
@@ -101,6 +105,7 @@ class CandidatureModel {
       'statut': statut,
       'reseau_actif': reseauActif,
       'nombre_abonnes': nombreAbonnes,
+      if (lienReseau != null && lienReseau!.isNotEmpty) 'lien_reseau': lienReseau,
       'telephone_proche': telephoneProche,
       'quartier': quartier,
       'application_status': applicationStatus,
@@ -120,6 +125,7 @@ class CandidatureModel {
       statut: map['statut'] ?? '',
       reseauActif: map['reseau_actif'] ?? '',
       nombreAbonnes: map['nombre_abonnes'] ?? '',
+      lienReseau: map['lien_reseau'],
       telephoneProche: map['telephone_proche'] ?? '',
       quartier: map['quartier'] ?? '',
       applicationStatus: map['application_status'] ?? 'soumis',

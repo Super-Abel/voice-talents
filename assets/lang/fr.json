@@ -24,6 +24,8 @@
   "status_other": "Autre",
   "label_active_network": "Réseau le plus actif",
   "label_followers": "Nombre d'abonnés",
+  "label_social_link": "Lien de votre profil (optionnel)",
+  "hint_social_link": "Ex: https://www.tiktok.com/@monprofil",
   "label_video": "Vidéo de chant (30s - Max 10 Mo)",
   "label_photo": "Photo professionnelle (Max 5 Mo)",
   "err_need_video": "Veuillez ajouter une vidéo.",

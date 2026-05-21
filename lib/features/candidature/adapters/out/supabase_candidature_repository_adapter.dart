@@ -51,6 +51,8 @@ class SupabaseCandidatureRepositoryAdapter implements CandidatureRepositoryPort 
       'statut': candidature.statut.isEmpty ? 'Non renseigné' : candidature.statut,
       'reseau_actif': candidature.reseauActif,
       'nombre_abonnes': candidature.nombreAbonnes,
+      if (candidature.lienReseau != null && candidature.lienReseau!.isNotEmpty)
+        'lien_reseau': candidature.lienReseau,
       'telephone_proche': candidature.telephoneProche,
       'quartier': candidature.quartier,
       'application_status': candidature.applicationStatus,
@@ -161,6 +163,7 @@ class SupabaseCandidatureRepositoryAdapter implements CandidatureRepositoryPort 
         statut: json['statut'] ?? '',
         reseauActif: json['reseau_actif'] ?? '',
         nombreAbonnes: json['nombre_abonnes'] ?? '',
+        lienReseau: json['lien_reseau'],
         telephoneProche: json['telephone_proche'] ?? '',
         quartier: json['quartier'] ?? '',
         applicationStatus: json['application_status'] ?? 'soumis',

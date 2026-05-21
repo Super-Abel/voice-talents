@@ -632,6 +632,18 @@ class _CandidatureScreenState extends ConsumerState<CandidatureScreen> {
                   onChanged: (val) => notifier.updateField(nombreAbonnes: val),
                 ),
               ),
+              SizedBox(
+                width: double.infinity,
+                child: CustomTextField(
+                  label: trans.translate('label_social_link'),
+                  hint: trans.translate('hint_social_link'),
+                  initialValue: formState.lienReseau ?? '',
+                  keyboardType: TextInputType.url,
+                  textInputAction: TextInputAction.done,
+                  prefixIcon: const Icon(Icons.link_rounded, size: 18),
+                  onChanged: (val) => notifier.updateField(lienReseau: val.trim().isEmpty ? null : val.trim()),
+                ),
+              ),
             ],
           ),
         );

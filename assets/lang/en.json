@@ -24,6 +24,8 @@
   "status_other": "Other",
   "label_active_network": "Most Active Network",
   "label_followers": "Number of Followers",
+  "label_social_link": "Your profile link (optional)",
+  "hint_social_link": "e.g. https://www.tiktok.com/@myprofile",
   "label_video": "Singing Video (30s - Max 10 MB)",
   "label_photo": "Professional Photo (Max 5 MB)",
   "err_need_video": "Please upload a video.",

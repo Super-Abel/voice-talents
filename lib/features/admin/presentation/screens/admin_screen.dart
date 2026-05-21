@@ -772,6 +772,26 @@ class AdminScreen extends ConsumerWidget {
                         '${lang == Language.fr ? 'Réseau : ' : 'Network: '}${candidature.reseauActif} (${candidature.nombreAbonnes})',
                         style: AppDesignSystem.bodyMedium.copyWith(color: AppDesignSystem.textSecondary),
                       ),
+                      if (candidature.lienReseau != null && candidature.lienReseau!.isNotEmpty)
+                        GestureDetector(
+                          onTap: () => _launchUrl(candidature.lienReseau!),
+                          child: Row(
+                            children: [
+                              const Icon(Icons.link_rounded, size: 14, color: AppDesignSystem.japapBlue),
+                              const SizedBox(width: 4),
+                              Expanded(
+                                child: Text(
+                                  candidature.lienReseau!,
+                                  style: AppDesignSystem.bodyMedium.copyWith(
+                                    color: AppDesignSystem.japapBlue,
+                                    decoration: TextDecoration.underline,
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
                       const Divider(height: 24),
 
                       // ── Médias ───────────────────────────────────────────
