@@ -16,7 +16,8 @@ class SuccessScreen extends ConsumerWidget {
     return Scaffold(
       backgroundColor: AppDesignSystem.backgroundAlt,
       body: Center(
-        child: ConstrainedBox(
+        child: SingleChildScrollView(
+          child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 600),
           child: Card(
             margin: const EdgeInsets.all(24),
@@ -155,6 +156,7 @@ class SuccessScreen extends ConsumerWidget {
               ),
             ),
           ),
+        ),
         ),
       ),
     );

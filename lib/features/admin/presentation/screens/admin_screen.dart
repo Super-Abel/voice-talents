@@ -214,36 +214,46 @@ class AdminScreen extends ConsumerWidget {
                               onChanged: (val) => ref.read(searchQueryProvider.notifier).update(val),
                             ),
                           ),
-                          DropdownButtonFormField<String?>(
-                            initialValue: selectedStatus,
-                            decoration: InputDecoration(
-                              labelText: trans.translate('col_status'),
-                              constraints: const BoxConstraints(maxWidth: 180),
-                              contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                          SizedBox(
+                            width: 200,
+                            child: DropdownButtonFormField<String?>(
+                              initialValue: selectedStatus,
+                              isExpanded: true,
+                              isDense: true,
+                              decoration: InputDecoration(
+                                labelText: trans.translate('col_status'),
+                                contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                border: const OutlineInputBorder(),
+                              ),
+                              onChanged: (val) => ref.read(statusFilterProvider.notifier).update(val),
+                              items: [
+                                DropdownMenuItem(value: null, child: Text(trans.translate('status_all'), overflow: TextOverflow.ellipsis)),
+                                DropdownMenuItem(value: 'soumis', child: Text(trans.translate('status_submitted'), overflow: TextOverflow.ellipsis)),
+                                DropdownMenuItem(value: 'en_revue', child: Text(trans.translate('status_under_review'), overflow: TextOverflow.ellipsis)),
+                                DropdownMenuItem(value: 'preselectionne', child: Text(trans.translate('status_shortlisted'), overflow: TextOverflow.ellipsis)),
+                                DropdownMenuItem(value: 'rejete', child: Text(trans.translate('status_rejected'), overflow: TextOverflow.ellipsis)),
+                                DropdownMenuItem(value: 'retenu', child: Text(trans.translate('status_accepted'), overflow: TextOverflow.ellipsis)),
+                              ],
                             ),
-                            onChanged: (val) => ref.read(statusFilterProvider.notifier).update(val),
-                            items: [
-                              DropdownMenuItem(value: null, child: Text(trans.translate('status_all'))),
-                              DropdownMenuItem(value: 'soumis', child: Text(trans.translate('status_submitted'))),
-                              DropdownMenuItem(value: 'en_revue', child: Text(trans.translate('status_under_review'))),
-                              DropdownMenuItem(value: 'preselectionne', child: Text(trans.translate('status_shortlisted'))),
-                              DropdownMenuItem(value: 'rejete', child: Text(trans.translate('status_rejected'))),
-                              DropdownMenuItem(value: 'retenu', child: Text(trans.translate('status_accepted'))),
-                            ],
                           ),
-                          DropdownButtonFormField<String?>(
-                            initialValue: selectedGender,
-                            decoration: InputDecoration(
-                              labelText: trans.translate('col_gender'),
-                              constraints: const BoxConstraints(maxWidth: 160),
-                              contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                          SizedBox(
+                            width: 170,
+                            child: DropdownButtonFormField<String?>(
+                              initialValue: selectedGender,
+                              isExpanded: true,
+                              isDense: true,
+                              decoration: InputDecoration(
+                                labelText: trans.translate('col_gender'),
+                                contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                border: const OutlineInputBorder(),
+                              ),
+                              onChanged: (val) => ref.read(genderFilterProvider.notifier).update(val),
+                              items: [
+                                DropdownMenuItem(value: null, child: Text(trans.translate('gender_all'), overflow: TextOverflow.ellipsis)),
+                                DropdownMenuItem(value: 'Homme', child: Text(trans.translate('gender_males'), overflow: TextOverflow.ellipsis)),
+                                DropdownMenuItem(value: 'Femme', child: Text(trans.translate('gender_females'), overflow: TextOverflow.ellipsis)),
+                              ],
                             ),
-                            onChanged: (val) => ref.read(genderFilterProvider.notifier).update(val),
-                            items: [
-                              DropdownMenuItem(value: null, child: Text(trans.translate('gender_all'))),
-                              DropdownMenuItem(value: 'Homme', child: Text(trans.translate('gender_males'))),
-                              DropdownMenuItem(value: 'Femme', child: Text(trans.translate('gender_females'))),
-                            ],
                           ),
                           if (selectedStatus != null || selectedGender != null || searchQuery.isNotEmpty)
                             TextButton.icon(
@@ -347,6 +357,8 @@ class AdminScreen extends ConsumerWidget {
             headingRowColor: WidgetStateProperty.all(AppDesignSystem.primary.withOpacity(0.04)),
             headingRowHeight: 52,
             dataRowHeight: 64,
+            columnSpacing: 16,
+            horizontalMargin: 12,
             columns: [
               DataColumn(label: Text(trans.translate('col_name'), style: AppDesignSystem.labelStyle.copyWith(fontWeight: FontWeight.bold))),
               DataColumn(label: Text(trans.translate('col_age'), style: AppDesignSystem.labelStyle.copyWith(fontWeight: FontWeight.bold))),
@@ -359,19 +371,28 @@ class AdminScreen extends ConsumerWidget {
             rows: list.map((c) => DataRow(
               cells: [
                 DataCell(
-                  Row(
-                    children: [
-                      CircleAvatar(
-                        backgroundColor: AppDesignSystem.primary.withOpacity(0.08),
-                        radius: 18,
-                        child: Text(
-                          c.nomPrenom.isNotEmpty ? c.nomPrenom[0].toUpperCase() : '?',
-                          style: AppDesignSystem.labelStyle.copyWith(color: AppDesignSystem.primary),
+                  SizedBox(
+                    width: 160,
+                    child: Row(
+                      children: [
+                        CircleAvatar(
+                          backgroundColor: AppDesignSystem.primary.withOpacity(0.08),
+                          radius: 16,
+                          child: Text(
+                            c.nomPrenom.isNotEmpty ? c.nomPrenom[0].toUpperCase() : '?',
+                            style: AppDesignSystem.labelStyle.copyWith(color: AppDesignSystem.primary),
+                          ),
                         ),
-                      ),
-                      const SizedBox(width: 12),
-                      Text(c.nomPrenom, style: AppDesignSystem.bodyMedium.copyWith(fontWeight: FontWeight.w600)),
-                    ],
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            c.nomPrenom,
+                            style: AppDesignSystem.bodyMedium.copyWith(fontWeight: FontWeight.w600),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
                 DataCell(Text('${c.age ?? "-"} ${lang == Language.fr ? 'ans' : 'years'}', style: AppDesignSystem.bodyMedium)),
@@ -754,38 +775,72 @@ class AdminScreen extends ConsumerWidget {
                       const Divider(height: 24),
 
                       // ── Médias ───────────────────────────────────────────
-                      Text(
-                        lang == Language.fr ? 'MÉDIAS' : 'MEDIA',
-                        style: AppDesignSystem.labelStyle,
-                      ),
+                      Text(lang == Language.fr ? 'MÉDIAS' : 'MEDIA', style: AppDesignSystem.labelStyle),
                       const SizedBox(height: 12),
                       Row(
                         children: [
-                          // Photo
+                          // Photo inline
                           Expanded(
-                            child: _MediaReplaceTile(
-                              label: trans.translate('tooltip_photo'),
-                              icon: Icons.image_rounded,
-                              url: currentPhotoUrl,
-                              isUploading: isUploadingPhoto,
-                              onPreview: currentPhotoUrl != null
-                                  ? () => _launchUrl(currentPhotoUrl!)
-                                  : null,
-                              onReplace: () => replaceFile('photo', setState, ctx),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text('Photo', style: AppDesignSystem.labelStyle),
+                                const SizedBox(height: 6),
+                                if (isUploadingPhoto)
+                                  const SizedBox(height: 80, child: Center(child: CircularProgressIndicator(strokeWidth: 2)))
+                                else if (currentPhotoUrl != null)
+                                  Stack(
+                                    children: [
+                                      ClipRRect(
+                                        borderRadius: AppDesignSystem.borderMedium,
+                                        child: Image.network(currentPhotoUrl!, height: 120, width: double.infinity, fit: BoxFit.cover),
+                                      ),
+                                      Positioned(top: 4, right: 4, child: Row(
+                                        children: [
+                                          _MediaActionBtn(icon: Icons.open_in_new_rounded, tooltip: 'Voir', onTap: () => _launchUrl(currentPhotoUrl!)),
+                                          const SizedBox(width: 4),
+                                          _MediaActionBtn(icon: Icons.download_rounded, tooltip: 'Télécharger', onTap: () => _launchUrl('${currentPhotoUrl!}&download=true')),
+                                          const SizedBox(width: 4),
+                                          _MediaActionBtn(icon: Icons.swap_horiz_rounded, tooltip: 'Remplacer', onTap: () => replaceFile('photo', setState, ctx)),
+                                        ],
+                                      )),
+                                    ],
+                                  )
+                                else
+                                  OutlinedButton.icon(onPressed: () => replaceFile('photo', setState, ctx), icon: const Icon(Icons.upload_rounded, size: 16), label: const Text('Ajouter')),
+                              ],
                             ),
                           ),
                           const SizedBox(width: 12),
-                          // Vidéo
+                          // Vidéo inline
                           Expanded(
-                            child: _MediaReplaceTile(
-                              label: trans.translate('tooltip_video'),
-                              icon: Icons.videocam_rounded,
-                              url: currentVideoUrl,
-                              isUploading: isUploadingVideo,
-                              onPreview: currentVideoUrl != null
-                                  ? () => _launchUrl(currentVideoUrl!)
-                                  : null,
-                              onReplace: () => replaceFile('video', setState, ctx),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text('Vidéo', style: AppDesignSystem.labelStyle),
+                                const SizedBox(height: 6),
+                                if (isUploadingVideo)
+                                  const SizedBox(height: 80, child: Center(child: CircularProgressIndicator(strokeWidth: 2)))
+                                else if (currentVideoUrl != null)
+                                  Container(
+                                    height: 120,
+                                    decoration: BoxDecoration(color: Colors.black87, borderRadius: AppDesignSystem.borderMedium),
+                                    child: Stack(
+                                      alignment: Alignment.center,
+                                      children: [
+                                        Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+                                          _MediaActionBtn(icon: Icons.play_circle_outline_rounded, tooltip: 'Lire', onTap: () => _launchUrl(currentVideoUrl!)),
+                                          const SizedBox(width: 8),
+                                          _MediaActionBtn(icon: Icons.download_rounded, tooltip: 'Télécharger', onTap: () => _launchUrl('${currentVideoUrl!}&download=true')),
+                                          const SizedBox(width: 8),
+                                          _MediaActionBtn(icon: Icons.swap_horiz_rounded, tooltip: 'Remplacer', onTap: () => replaceFile('video', setState, ctx)),
+                                        ]),
+                                      ],
+                                    ),
+                                  )
+                                else
+                                  OutlinedButton.icon(onPressed: () => replaceFile('video', setState, ctx), icon: const Icon(Icons.upload_rounded, size: 16), label: const Text('Ajouter')),
+                              ],
                             ),
                           ),
                         ],
@@ -827,6 +882,24 @@ class AdminScreen extends ConsumerWidget {
                 ),
               ),
               actions: [
+                // ── Bouton WhatsApp ──────────────────────────────
+                IconButton(
+                  tooltip: 'Contacter sur WhatsApp',
+                  icon: const Icon(Icons.chat_rounded, color: Color(0xFF25D366)),
+                  onPressed: () {
+                    final phone = candidature.whatsapp.replaceAll(RegExp(r'[\s\-\(\)]'), '');
+                    final formattedPhone = phone.startsWith('+') ? phone.substring(1) : phone;
+                    final msg = switch (currentStatus) {
+                      'preselectionne' => 'Bonjour ${candidature.nomPrenom}, félicitations ! Vous êtes présélectionné(e) pour Voice Talents Saison 1. Notre équipe vous contactera prochainement.',
+                      'retenu'         => 'Bonjour ${candidature.nomPrenom}, félicitations ! Vous êtes officiellement retenu(e) pour Voice Talents Saison 1 🎉 Bienvenue dans l\'aventure !',
+                      'rejete'         => 'Bonjour ${candidature.nomPrenom}, merci pour votre candidature à Voice Talents. Nous avons bien étudié votre profil mais ne pouvons pas y donner suite cette fois. Bonne continuation !',
+                      'en_revue'       => 'Bonjour ${candidature.nomPrenom}, votre candidature Voice Talents est en cours d\'examen par notre équipe. Nous revenons vers vous très prochainement.',
+                      _                => 'Bonjour ${candidature.nomPrenom}, nous avons bien reçu votre candidature Voice Talents Saison 1. Merci !',
+                    };
+                    final url = Uri.parse('https://wa.me/$formattedPhone?text=${Uri.encodeComponent(msg)}');
+                    _launchUrl(url.toString());
+                  },
+                ),
                 TextButton(
                   onPressed: () => Navigator.pop(ctx),
                   child: Text(trans.translate('btn_cancel'),
@@ -1020,77 +1093,28 @@ class AdminScreen extends ConsumerWidget {
   }
 }
 
-class _MediaReplaceTile extends StatelessWidget {
-  final String label;
+class _MediaActionBtn extends StatelessWidget {
   final IconData icon;
-  final String? url;
-  final bool isUploading;
-  final VoidCallback? onPreview;
-  final VoidCallback onReplace;
+  final String tooltip;
+  final VoidCallback onTap;
 
-  const _MediaReplaceTile({
-    required this.label,
-    required this.icon,
-    required this.url,
-    required this.isUploading,
-    required this.onPreview,
-    required this.onReplace,
-  });
+  const _MediaActionBtn({required this.icon, required this.tooltip, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(10),
-      decoration: BoxDecoration(
-        border: Border.all(color: Colors.grey.shade200),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Row(
-            children: [
-              Icon(icon, size: 16, color: AppDesignSystem.textSecondary),
-              const SizedBox(width: 6),
-              Text(label, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
-            ],
+    return Tooltip(
+      message: tooltip,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(20),
+        child: Container(
+          padding: const EdgeInsets.all(6),
+          decoration: BoxDecoration(
+            color: Colors.black54,
+            borderRadius: BorderRadius.circular(20),
           ),
-          const SizedBox(height: 8),
-          if (isUploading)
-            const SizedBox(
-              height: 36,
-              child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
-            )
-          else if (url != null)
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                IconButton(
-                  onPressed: onPreview,
-                  icon: const Icon(Icons.open_in_new_rounded, size: 18),
-                  tooltip: 'Voir',
-                  padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(),
-                ),
-                IconButton(
-                  onPressed: onReplace,
-                  icon: const Icon(Icons.swap_horiz_rounded, size: 18, color: AppDesignSystem.primary),
-                  tooltip: 'Remplacer',
-                  padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(),
-                ),
-              ],
-            )
-          else
-            TextButton.icon(
-              onPressed: onReplace,
-              icon: const Icon(Icons.upload_rounded, size: 16),
-              label: const Text('Ajouter', style: TextStyle(fontSize: 12)),
-              style: TextButton.styleFrom(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              ),
-            ),
-        ],
+          child: Icon(icon, size: 16, color: Colors.white),
+        ),
       ),
     );
   }
