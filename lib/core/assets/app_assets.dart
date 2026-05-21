@@ -6,6 +6,8 @@ abstract class AppAssets {
   static const String logoOtisStudio = 'assets/images/LOGO OTIS STUDIO.png';
   static const String logoTalent237 = 'assets/images/LOGO TALENT 237.png';
   static const String logoJapapTalent = 'assets/images/IMG_4453.JPG';
+  static const String logoGlobal = 'assets/images/Logo 2 GLTV.png';
+
 
   // ── Langues ──────────────────────────────────────────────────
   static const String langFr = 'assets/lang/fr.json';

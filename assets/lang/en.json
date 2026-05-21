@@ -148,5 +148,14 @@
 
   "btn_retry": "Retry",
   "label_password": "Password",
-  "label_email": "Email"
+  "label_email": "Email",
+  "header_form_title": "REGISTRATION FORM",
+  "header_voice_talent": "VOICE TALENT",
+  "header_edition": "first edition - douala",
+  "header_click_to_visit": "CLICK TO VISIT",
+  "header_official_sponsor": "OFFICIAL SPONSOR",
+  "tooltip_visit_japap": "Visit Japap Messenger",
+  "footer_generation_voice": "BECOME THE VOICE OF A GENERATION!",
+  "footer_contact_us": "CONTACT US",
+  "footer_address": "Bonapriso Koloko Street opposite the railway laboratory"
 }

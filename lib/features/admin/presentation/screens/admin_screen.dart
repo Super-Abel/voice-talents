@@ -360,6 +360,7 @@ class AdminScreen extends ConsumerWidget {
             columnSpacing: 16,
             horizontalMargin: 12,
             columns: [
+              DataColumn(label: Text('Date', style: AppDesignSystem.labelStyle.copyWith(fontWeight: FontWeight.bold))),
               DataColumn(label: Text(trans.translate('col_name'), style: AppDesignSystem.labelStyle.copyWith(fontWeight: FontWeight.bold))),
               DataColumn(label: Text(trans.translate('col_age'), style: AppDesignSystem.labelStyle.copyWith(fontWeight: FontWeight.bold))),
               DataColumn(label: Text(trans.translate('col_gender'), style: AppDesignSystem.labelStyle.copyWith(fontWeight: FontWeight.bold))),
@@ -370,6 +371,7 @@ class AdminScreen extends ConsumerWidget {
             ],
             rows: list.map((c) => DataRow(
               cells: [
+                DataCell(Text(_formatDate(c.createdAt), style: AppDesignSystem.bodyMedium.copyWith(fontSize: 12, color: AppDesignSystem.textSecondary))),
                 DataCell(
                   SizedBox(
                     width: 160,
@@ -646,6 +648,12 @@ class AdminScreen extends ConsumerWidget {
     }
   }
 
+  String _formatDate(DateTime? date) {
+    if (date == null) return '-';
+    final d = date.toLocal();
+    return '${d.day.toString().padLeft(2, '0')}/${d.month.toString().padLeft(2, '0')}/${d.year} à ${d.hour.toString().padLeft(2, '0')}:${d.minute.toString().padLeft(2, '0')}';
+  }
+
   // --- BOÎTE DE DIALOGUE DE DÉCISION ET ÉVALUATION ---
   void _showReviewDialog(BuildContext context, WidgetRef ref, CandidatureModel candidature) {
     String currentStatus = candidature.applicationStatus;
@@ -761,6 +769,11 @@ class AdminScreen extends ConsumerWidget {
                     children: [
                       // ── Infos candidat ───────────────────────────────────
                       Text(
+                        '${lang == Language.fr ? 'Soumis le : ' : 'Submitted on: '}${_formatDate(candidature.createdAt)}',
+                        style: AppDesignSystem.bodyMedium.copyWith(color: AppDesignSystem.textSecondary, fontWeight: FontWeight.bold),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
                         '${lang == Language.fr ? 'Âge : ' : 'Age: '}${candidature.age ?? "-"} ${lang == Language.fr ? 'ans' : 'years'} | ${lang == Language.fr ? 'Sexe : ' : 'Gender: '}${candidature.sexe == 'Homme' ? trans.translate('sex_male') : trans.translate('sex_female')}',
                         style: AppDesignSystem.bodyMedium.copyWith(color: AppDesignSystem.textSecondary),
                       ),
@@ -772,26 +785,45 @@ class AdminScreen extends ConsumerWidget {
                         '${lang == Language.fr ? 'Réseau : ' : 'Network: '}${candidature.reseauActif} (${candidature.nombreAbonnes})',
                         style: AppDesignSystem.bodyMedium.copyWith(color: AppDesignSystem.textSecondary),
                       ),
-                      if (candidature.lienReseau != null && candidature.lienReseau!.isNotEmpty)
-                        GestureDetector(
-                          onTap: () => _launchUrl(candidature.lienReseau!),
-                          child: Row(
-                            children: [
-                              const Icon(Icons.link_rounded, size: 14, color: AppDesignSystem.japapBlue),
-                              const SizedBox(width: 4),
-                              Expanded(
-                                child: Text(
-                                  candidature.lienReseau!,
-                                  style: AppDesignSystem.bodyMedium.copyWith(
-                                    color: AppDesignSystem.japapBlue,
-                                    decoration: TextDecoration.underline,
-                                  ),
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ),
-                            ],
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            lang == Language.fr ? 'Lien Social : ' : 'Social Link: ',
+                            style: AppDesignSystem.bodyMedium.copyWith(color: AppDesignSystem.textSecondary),
                           ),
-                        ),
+                          Expanded(
+                            child: (candidature.lienReseau != null && candidature.lienReseau!.isNotEmpty)
+                                ? GestureDetector(
+                                    onTap: () => _launchUrl(candidature.lienReseau!),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        const Icon(Icons.link_rounded, size: 14, color: AppDesignSystem.japapBlue),
+                                        const SizedBox(width: 4),
+                                        Flexible(
+                                          child: Text(
+                                            candidature.lienReseau!,
+                                            style: AppDesignSystem.bodyMedium.copyWith(
+                                              color: AppDesignSystem.japapBlue,
+                                              decoration: TextDecoration.underline,
+                                            ),
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  )
+                                : Text(
+                                    lang == Language.fr ? 'Non renseigné' : 'Not provided',
+                                    style: AppDesignSystem.bodyMedium.copyWith(
+                                      color: AppDesignSystem.textSecondary,
+                                      fontStyle: FontStyle.italic,
+                                    ),
+                                  ),
+                          ),
+                        ],
+                      ),
                       const Divider(height: 24),
 
                       // ── Médias ───────────────────────────────────────────

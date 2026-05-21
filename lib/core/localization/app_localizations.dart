@@ -26,8 +26,19 @@ abstract class AppKeys {
   // ── Header ────────────────────────────────────────────────────────────────
   static const headerTitle       = 'header_title';
   static const headerSeason      = 'header_season';
+  static const headerFormTitle   = 'header_form_title';
+  static const headerVoiceTalent = 'header_voice_talent';
+  static const headerEdition     = 'header_edition';
+  static const headerClickToVisit = 'header_click_to_visit';
+  static const headerOfficialSponsor = 'header_official_sponsor';
+  
+  // ── Footer ────────────────────────────────────────────────────────────────
+  static const footerGenerationVoice = 'footer_generation_voice';
+  static const footerContactUs   = 'footer_contact_us';
+  static const footerAddress     = 'footer_address';
 
   // ── Tooltips ──────────────────────────────────────────────────────────────
+  static const tooltipVisitJapap = 'tooltip_visit_japap';
   static const tooltipAdmin      = 'tooltip_admin';
   static const tooltipTrack      = 'tooltip_track';
   static const tooltipRefresh    = 'tooltip_refresh';

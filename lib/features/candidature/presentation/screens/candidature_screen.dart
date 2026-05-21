@@ -6,6 +6,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../../core/localization/app_localizations.dart';
+import '../../../../core/utils/app_constants.dart';
 import '../../../../core/assets/app_assets.dart';
 import '../../../../core/utils/dialogs.dart';
 
@@ -159,7 +160,9 @@ class _CandidatureScreenState extends ConsumerState<CandidatureScreen> {
                 ),
               ],
             ),
-            child: ConstrainedBox(
+            child: ClipRRect(
+              borderRadius: AppDesignSystem.borderExtraLarge,
+              child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 720),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -197,38 +200,36 @@ class _CandidatureScreenState extends ConsumerState<CandidatureScreen> {
                           child: Column(
                             mainAxisSize: MainAxisSize.min,
                             children: [
+                              Text(
+                                trans.translate(AppKeys.headerFormTitle),
+                                textAlign: TextAlign.center,
+                                style: GoogleFonts.montserrat(
+                                  fontSize: isMobile ? 14 : 26,
+                                  fontWeight: FontWeight.w900,
+                                  color: Colors.black,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
                               RichText(
                                 textAlign: TextAlign.center,
                                 text: TextSpan(
                                   style: GoogleFonts.montserrat(
-                                    fontSize: isMobile ? 16 : 28,
-                                    fontWeight: FontWeight.w900,
+                                    fontSize: isMobile ? 12 : 20,
+                                    fontWeight: FontWeight.bold,
                                     color: AppDesignSystem.primary,
                                     letterSpacing: -0.5,
                                   ),
                                   children: [
                                     const TextSpan(text: 'VOICE '),
                                     TextSpan(
-                                      text: 'TALENTS',
+                                      text: 'TALENT',
                                       style: TextStyle(
                                         color: AppDesignSystem.accentYellow,
                                         shadows: [
-                                          Shadow(
-                                            offset: const Offset(1, 1),
-                                            color: AppDesignSystem.primary,
-                                          ),
-                                          Shadow(
-                                            offset: const Offset(-1, 1),
-                                            color: AppDesignSystem.primary,
-                                          ),
-                                          Shadow(
-                                            offset: const Offset(1, -1),
-                                            color: AppDesignSystem.primary,
-                                          ),
-                                          Shadow(
-                                            offset: const Offset(-1, -1),
-                                            color: AppDesignSystem.primary,
-                                          ),
+                                          Shadow(offset: const Offset(1, 1), color: AppDesignSystem.primary),
+                                          Shadow(offset: const Offset(-1, 1), color: AppDesignSystem.primary),
+                                          Shadow(offset: const Offset(1, -1), color: AppDesignSystem.primary),
+                                          Shadow(offset: const Offset(-1, -1), color: AppDesignSystem.primary),
                                         ],
                                       ),
                                     ),
@@ -240,54 +241,33 @@ class _CandidatureScreenState extends ConsumerState<CandidatureScreen> {
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
                                   Text(
-                                    trans.translate('header_season'),
+                                    trans.translate(AppKeys.headerEdition),
                                     style: TextStyle(
-                                      color: Colors.grey.shade400,
-                                      fontSize: isMobile ? 8 : 11,
-                                      fontWeight: FontWeight.w800,
-                                      letterSpacing: 3.0,
+                                      color: Colors.grey.shade500,
+                                      fontSize: isMobile ? 9 : 14,
+                                      fontStyle: FontStyle.italic,
+                                      fontWeight: FontWeight.w600,
                                     ),
                                   ),
                                   const SizedBox(width: 8),
                                   GestureDetector(
-                                    onTap: () => ref
-                                        .read(languageProvider.notifier)
-                                        .toggleLanguage(),
+                                    onTap: () => ref.read(languageProvider.notifier).toggleLanguage(),
                                     child: Container(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 6,
-                                        vertical: 2,
-                                      ),
+                                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                                       decoration: BoxDecoration(
-                                        color: AppDesignSystem.primary
-                                            .withOpacity(0.08),
-                                        borderRadius:
-                                            AppDesignSystem.borderSmall,
-                                        border: Border.all(
-                                          color: AppDesignSystem.primary
-                                              .withOpacity(0.15),
-                                        ),
+                                        color: AppDesignSystem.primary.withOpacity(0.08),
+                                        borderRadius: AppDesignSystem.borderSmall,
+                                        border: Border.all(color: AppDesignSystem.primary.withOpacity(0.15)),
                                       ),
                                       child: Row(
                                         mainAxisSize: MainAxisSize.min,
                                         children: [
                                           Text(
-                                            lang == Language.fr
-                                                ? 'FR 🇫🇷'
-                                                : 'EN 🇬🇧',
-                                            style: AppDesignSystem.labelStyle
-                                                .copyWith(
-                                                  color:
-                                                      AppDesignSystem.primary,
-                                                  fontSize: 9,
-                                                ),
+                                            lang == Language.fr ? 'FR 🇫🇷' : 'EN 🇬🇧',
+                                            style: AppDesignSystem.labelStyle.copyWith(color: AppDesignSystem.primary, fontSize: 9),
                                           ),
                                           const SizedBox(width: 2),
-                                          Icon(
-                                            Icons.translate,
-                                            size: 8,
-                                            color: AppDesignSystem.primary,
-                                          ),
+                                          Icon(Icons.translate, size: 8, color: AppDesignSystem.primary),
                                         ],
                                       ),
                                     ),
@@ -298,36 +278,82 @@ class _CandidatureScreenState extends ConsumerState<CandidatureScreen> {
                           ),
                         ),
                         // Right Logo (SPONSOR PRINCIPAL JAPAP MESSENGER with active redirection link)
-                        GestureDetector(
-                          onTap: () async {
-                            final url = Uri.parse('https://japapmessenger.com');
-                            if (await canLaunchUrl(url)) {
-                              await launchUrl(
-                                url,
-                                mode: LaunchMode.externalApplication,
-                              );
-                            }
-                          },
-                          child: Container(
-                            width: isMobile ? 55 : 80,
-                            height: isMobile ? 55 : 80,
-                            decoration: BoxDecoration(
-                              color: Colors.grey.shade50,
-                              borderRadius: AppDesignSystem.borderMedium,
-                              border: Border.all(color: Colors.grey.shade100),
+                        Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              trans.translate(AppKeys.headerClickToVisit),
+                              style: TextStyle(
+                                color: AppDesignSystem.primary.withOpacity(0.5),
+                                fontSize: isMobile ? 6 : 9,
+                                fontWeight: FontWeight.bold,
+                                letterSpacing: 1.0,
+                              ),
                             ),
-                            child: ClipRRect(
-                              borderRadius: AppDesignSystem.borderMedium,
-                              child: Image.asset(
-                                AppAssets.logoJapapMessenger,
-                                fit: BoxFit.cover,
-                                errorBuilder: (_, __, ___) => const Icon(
-                                  Icons.link,
-                                  color: AppDesignSystem.japapBlue,
+                            const SizedBox(height: 4),
+                            Tooltip(
+                              message: trans.translate(AppKeys.tooltipVisitJapap),
+                              child: MouseRegion(
+                                cursor: SystemMouseCursors.click,
+                                child: GestureDetector(
+                                  onTap: () async {
+                                    final url = Uri.parse(AppConstants.japapMessengerUrl);
+                                    if (await canLaunchUrl(url)) {
+                                      await launchUrl(
+                                        url,
+                                        mode: LaunchMode.externalApplication,
+                                      );
+                                    }
+                                  },
+                                  child: AnimatedContainer(
+                                    duration: const Duration(milliseconds: 200),
+                                    width: isMobile ? 55 : 80,
+                                    height: isMobile ? 55 : 80,
+                                    decoration: BoxDecoration(
+                                      color: Colors.white,
+                                      borderRadius: AppDesignSystem.borderMedium,
+                                      border: Border.all(color: AppDesignSystem.japapBlue.withOpacity(0.2)),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: AppDesignSystem.japapBlue.withOpacity(0.1),
+                                          blurRadius: 12,
+                                          offset: const Offset(0, 4),
+                                        ),
+                                      ],
+                                    ),
+                                    child: ClipRRect(
+                                      borderRadius: AppDesignSystem.borderMedium,
+                                      child: Image.asset(
+                                        AppAssets.logoJapapMessenger,
+                                        fit: BoxFit.cover,
+                                        errorBuilder: (_, __, ___) => const Icon(
+                                          Icons.link,
+                                          color: AppDesignSystem.japapBlue,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
                                 ),
                               ),
                             ),
-                          ),
+                            const SizedBox(height: 4),
+                            Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  trans.translate(AppKeys.headerOfficialSponsor),
+                                  style: TextStyle(
+                                    color: Colors.grey.shade500,
+                                    fontSize: isMobile ? 6 : 9,
+                                    fontWeight: FontWeight.bold,
+                                    letterSpacing: 1.0,
+                                  ),
+                                ),
+                                const SizedBox(width: 2),
+                                Icon(Icons.touch_app, size: isMobile ? 10 : 14, color: AppDesignSystem.primary),
+                              ],
+                            ),
+                          ],
                         ),
                       ],
                     ),
@@ -495,9 +521,10 @@ class _CandidatureScreenState extends ConsumerState<CandidatureScreen> {
 
                   // FOOTER (Partenaires Officiels)
                   Container(
-                    decoration: const BoxDecoration(
+                    decoration: BoxDecoration(
                       color: Colors.white,
-                      border: Border(top: BorderSide(color: Color(0xFFF2F2F2))),
+                      borderRadius: const BorderRadius.vertical(bottom: Radius.circular(32)), // Matches borderExtraLarge visually if it's 32, but ClipRRect is safer. We'll rely on the ClipRRect above.
+                      border: const Border(top: BorderSide(color: Color(0xFFF2F2F2))),
                     ),
                     padding: const EdgeInsets.symmetric(
                       vertical: 24,
@@ -520,27 +547,32 @@ class _CandidatureScreenState extends ConsumerState<CandidatureScreen> {
                           children: [
                             _buildPartnerLogo(
                               AppAssets.logoCentreLinguistique,
-                              height: isMobile ? 50 : 70,
+                              height: isMobile ? 70 : 100,
                             ),
-                            SizedBox(width: isMobile ? 24 : 48),
+                            SizedBox(width: isMobile ? 32 : 64),
                             _buildPartnerLogo(
                               AppAssets.logoOtisStudio,
-                              height: isMobile ? 50 : 70,
+                              height: isMobile ? 70 : 100,
                             ),
-                            SizedBox(width: isMobile ? 24 : 48),
+                            SizedBox(width: isMobile ? 32 : 64),
                             _buildPartnerLogo(
                               AppAssets.logoTalent237,
-                              height: isMobile ? 50 : 70,
+                              height: isMobile ? 70 : 100,
                             ),
-                            SizedBox(width: isMobile ? 24 : 48),
+                            SizedBox(width: isMobile ? 32 : 64),
                             _buildPartnerLogo(
                               AppAssets.logoJapapTalent,
-                              height: isMobile ? 50 : 70,
+                              height: isMobile ? 70 : 100,
                             ),
-                            SizedBox(width: isMobile ? 24 : 48), // Added trailing spacing for seamless loop
+                            SizedBox(width: isMobile ? 32 : 64), // Added trailing spacing for seamless loop
                           ],
                         ),
-                        const SizedBox(height: 24),
+                        const SizedBox(height: 48),
+                        const Divider(color: Color(0xFFF2F2F2), thickness: 2),
+                        const SizedBox(height: 32),
+                        // Footer Contact & Social Section
+                        _buildContactFooter(isMobile, trans, lang),
+                        const SizedBox(height: 48),
                         // Action Buttons for Navigation
                         TextButton.icon(
                           onPressed: () => context.push('/tracking'),
@@ -559,13 +591,134 @@ class _CandidatureScreenState extends ConsumerState<CandidatureScreen> {
           ),
         ),
       ),
+      ),
     );
   }
 
-  Widget _buildPartnerLogo(String assetPath, {double height = 80}) {
+  Widget _buildContactFooter(bool isMobile, TranslationService trans, Language lang) {
+    return Column(
+      children: [
+        // Logo
+        Container(
+          width: 80,
+          height: 80,
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: [
+              BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4)),
+            ],
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(20),
+            child: Image.asset(AppAssets.logoVoiceTalents, fit: BoxFit.cover),
+          ),
+        ),
+        const SizedBox(height: 16),
+        // Title
+        Text(
+          trans.translate(AppKeys.footerGenerationVoice),
+          textAlign: TextAlign.center,
+          style: GoogleFonts.montserrat(
+            color: AppDesignSystem.primary,
+            fontSize: isMobile ? 14 : 18,
+            fontWeight: FontWeight.w900,
+            fontStyle: FontStyle.italic,
+            letterSpacing: 0.5,
+          ),
+        ),
+        const SizedBox(height: 32),
+        const Divider(color: Color(0xFFF2F2F2), thickness: 1),
+        const SizedBox(height: 32),
+        // Socials
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            _buildSocialIcon(Icons.facebook, AppConstants.facebookUrl),
+            const SizedBox(width: 16),
+            _buildSocialIcon(Icons.video_library, AppConstants.youtubeUrl),
+            const SizedBox(width: 16),
+            _buildSocialIcon(Icons.camera_alt, AppConstants.instagramUrl),
+            const SizedBox(width: 16),
+            _buildSocialIcon(Icons.music_note, AppConstants.tiktokUrl),
+          ],
+        ),
+        const SizedBox(height: 32),
+        Text(
+          trans.translate(AppKeys.footerContactUs),
+          style: TextStyle(
+            color: Colors.grey.shade400,
+            fontSize: 10,
+            fontWeight: FontWeight.w800,
+            letterSpacing: 2.0,
+          ),
+        ),
+        const SizedBox(height: 24),
+        // Contact details
+        Center(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildContactRow(Icons.email_outlined, AppConstants.contactEmail),
+              const SizedBox(height: 16),
+              _buildContactRow(Icons.phone_outlined, AppConstants.contactPhone),
+              const SizedBox(height: 16),
+              _buildContactRow(Icons.location_on_outlined, trans.translate(AppKeys.footerAddress), isMobile: isMobile),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSocialIcon(IconData icon, String url) {
+    return InkWell(
+      onTap: () async {
+        final uri = Uri.parse(url);
+        if (await canLaunchUrl(uri)) {
+          await launchUrl(uri, mode: LaunchMode.externalApplication);
+        }
+      },
+      borderRadius: BorderRadius.circular(20),
+      child: Container(
+        padding: const EdgeInsets.all(10),
+        decoration: const BoxDecoration(
+          color: AppDesignSystem.primary,
+          shape: BoxShape.circle,
+        ),
+        child: Icon(icon, color: Colors.white, size: 20),
+      ),
+    );
+  }
+
+  Widget _buildContactRow(IconData icon, String text, {bool isMobile = false}) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: AppDesignSystem.primary.withOpacity(0.08),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Icon(icon, color: AppDesignSystem.primary, size: 16),
+        ),
+        const SizedBox(width: 16),
+        Flexible(
+          child: Text(
+            text,
+            style: AppDesignSystem.bodyMedium.copyWith(fontWeight: FontWeight.w600, color: AppDesignSystem.primary),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildPartnerLogo(String assetPath, {double height = 100}) {
     return SizedBox(
       height: height,
-      width: 180,
+      width: 240, // Increased width to accommodate larger logos without squishing
       child: Image.asset(
         assetPath,
         fit: BoxFit.contain,
