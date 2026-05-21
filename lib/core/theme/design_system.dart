@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+
 
 /// ═══════════════════════════════════════════════════════════
 /// VOICE TALENTS — AppDesignSystem
@@ -244,8 +244,50 @@ class AppDesignSystem {
   // 12. TYPOGRAPHY
   // ─────────────────────────────────────────
 
+  // Helper for local Montserrat text styles (offline fallback)
+  static TextStyle _montserratStyle({
+    required double fontSize,
+    required FontWeight fontWeight,
+    required Color color,
+    double? letterSpacing,
+    double? height,
+    FontStyle? fontStyle,
+  }) {
+    return TextStyle(
+      fontFamily: 'Montserrat',
+      fontFamilyFallback: const ['sans-serif'],
+      fontSize: fontSize,
+      fontWeight: fontWeight,
+      color: color,
+      letterSpacing: letterSpacing,
+      height: height,
+      fontStyle: fontStyle,
+    );
+  }
+
+  // Helper for local Outfit text styles (offline fallback)
+  static TextStyle _outfitStyle({
+    required double fontSize,
+    required FontWeight fontWeight,
+    Color? color,
+    double? letterSpacing,
+    double? height,
+    FontStyle? fontStyle,
+  }) {
+    return TextStyle(
+      fontFamily: 'Outfit',
+      fontFamilyFallback: const ['sans-serif'],
+      fontSize: fontSize,
+      fontWeight: fontWeight,
+      color: color,
+      letterSpacing: letterSpacing,
+      height: height,
+      fontStyle: fontStyle,
+    );
+  }
+
   // Display
-  static TextStyle get displayLarge => GoogleFonts.outfit(
+  static TextStyle get displayLarge => _outfitStyle(
         fontSize: 40,
         fontWeight: FontWeight.w900,
         color: textMain,
@@ -253,7 +295,7 @@ class AppDesignSystem {
         height: 1.1,
       );
 
-  static TextStyle get displayMedium => GoogleFonts.outfit(
+  static TextStyle get displayMedium => _outfitStyle(
         fontSize: 32,
         fontWeight: FontWeight.w800,
         color: textMain,
@@ -262,7 +304,7 @@ class AppDesignSystem {
       );
 
   // Headings
-  static TextStyle get titleLarge => GoogleFonts.outfit(
+  static TextStyle get titleLarge => _outfitStyle(
         fontSize: 24,
         fontWeight: FontWeight.w800,
         color: textMain,
@@ -270,14 +312,14 @@ class AppDesignSystem {
         height: 1.2,
       );
 
-  static TextStyle get titleMedium => GoogleFonts.outfit(
+  static TextStyle get titleMedium => _outfitStyle(
         fontSize: 20,
         fontWeight: FontWeight.w700,
         color: textMain,
         height: 1.25,
       );
 
-  static TextStyle get titleSmall => GoogleFonts.outfit(
+  static TextStyle get titleSmall => _outfitStyle(
         fontSize: 16,
         fontWeight: FontWeight.w600,
         color: textMain,
@@ -285,21 +327,21 @@ class AppDesignSystem {
       );
 
   // Body
-  static TextStyle get bodyLarge => GoogleFonts.montserrat(
+  static TextStyle get bodyLarge => _montserratStyle(
         fontSize: 16,
         fontWeight: FontWeight.w500,
         color: textMain,
         height: 1.6,
       );
 
-  static TextStyle get bodyMedium => GoogleFonts.montserrat(
+  static TextStyle get bodyMedium => _montserratStyle(
         fontSize: 14,
         fontWeight: FontWeight.w400,
         color: textMain,
         height: 1.5,
       );
 
-  static TextStyle get bodySmall => GoogleFonts.montserrat(
+  static TextStyle get bodySmall => _montserratStyle(
         fontSize: 12,
         fontWeight: FontWeight.w400,
         color: textSecondary,
@@ -307,28 +349,28 @@ class AppDesignSystem {
       );
 
   // UI elements
-  static TextStyle get labelStyle => GoogleFonts.outfit(
+  static TextStyle get labelStyle => _outfitStyle(
         fontSize: 11,
         fontWeight: FontWeight.w700,
         color: textSecondary,
         letterSpacing: 1.0,
       );
 
-  static TextStyle get captionStyle => GoogleFonts.montserrat(
+  static TextStyle get captionStyle => _montserratStyle(
         fontSize: 11,
         fontWeight: FontWeight.w500,
         color: textMuted,
         letterSpacing: 0.3,
       );
 
-  static TextStyle get buttonText => GoogleFonts.outfit(
+  static TextStyle get buttonText => _outfitStyle(
         fontSize: 15,
         fontWeight: FontWeight.w700,
         color: textOnPrimary,
         letterSpacing: 0.8,
       );
 
-  static TextStyle get chipText => GoogleFonts.outfit(
+  static TextStyle get chipText => _outfitStyle(
         fontSize: 12,
         fontWeight: FontWeight.w600,
         letterSpacing: 0.2,

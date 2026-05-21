@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 import 'core/theme/app_theme.dart';
 import 'core/routing/app_router.dart';
@@ -13,6 +14,9 @@ import 'core/localization/translation_provider.dart';
 /// ═══════════════════════════════════════════════════════════
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Disable dynamic font downloading to prevent connection timeouts when offline/behind firewall
+  GoogleFonts.config.allowRuntimeFetching = false;
 
   // Lock to portrait on mobile if needed (remove for web-only)
   await SystemChrome.setPreferredOrientations([

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'design_system.dart';
 
 /// Application theme built entirely on AppDesignSystem tokens.
@@ -21,7 +20,9 @@ class AppTheme {
       scaffoldBackgroundColor: AppDesignSystem.background,
 
       // ── Typography ─────────────────────────────────────────
-      textTheme: GoogleFonts.montserratTextTheme().apply(
+      textTheme: const TextTheme().apply(
+        fontFamily: 'Montserrat',
+        fontFamilyFallback: const ['sans-serif'],
         bodyColor: AppDesignSystem.textMain,
         displayColor: AppDesignSystem.textMain,
       ),

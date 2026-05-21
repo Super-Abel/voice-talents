@@ -203,7 +203,9 @@ class _CandidatureScreenState extends ConsumerState<CandidatureScreen> {
                               Text(
                                 trans.translate(AppKeys.headerFormTitle),
                                 textAlign: TextAlign.center,
-                                style: GoogleFonts.montserrat(
+                                style: TextStyle(
+                                  fontFamily: 'Montserrat',
+                                  fontFamilyFallback: const ['sans-serif'],
                                   fontSize: isMobile ? 14 : 26,
                                   fontWeight: FontWeight.w900,
                                   color: Colors.black,
@@ -213,7 +215,9 @@ class _CandidatureScreenState extends ConsumerState<CandidatureScreen> {
                               RichText(
                                 textAlign: TextAlign.center,
                                 text: TextSpan(
-                                  style: GoogleFonts.montserrat(
+                                  style: TextStyle(
+                                    fontFamily: 'Montserrat',
+                                    fontFamilyFallback: const ['sans-serif'],
                                     fontSize: isMobile ? 12 : 20,
                                     fontWeight: FontWeight.bold,
                                     color: AppDesignSystem.primary,
@@ -237,8 +241,11 @@ class _CandidatureScreenState extends ConsumerState<CandidatureScreen> {
                                 ),
                               ),
                               const SizedBox(height: 4),
-                              Row(
-                                mainAxisSize: MainAxisSize.min,
+                              Wrap(
+                                alignment: WrapAlignment.center,
+                                crossAxisAlignment: WrapCrossAlignment.center,
+                                spacing: 8,
+                                runSpacing: 4,
                                 children: [
                                   Text(
                                     trans.translate(AppKeys.headerEdition),
@@ -249,7 +256,6 @@ class _CandidatureScreenState extends ConsumerState<CandidatureScreen> {
                                       fontWeight: FontWeight.w600,
                                     ),
                                   ),
-                                  const SizedBox(width: 8),
                                   GestureDetector(
                                     onTap: () => ref.read(languageProvider.notifier).toggleLanguage(),
                                     child: Container(
@@ -564,7 +570,12 @@ class _CandidatureScreenState extends ConsumerState<CandidatureScreen> {
                               AppAssets.logoJapapTalent,
                               height: isMobile ? 70 : 100,
                             ),
-                            SizedBox(width: isMobile ? 32 : 64), // Added trailing spacing for seamless loop
+                            SizedBox(width: isMobile ? 32 : 64),
+                            _buildPartnerLogo(
+                              AppAssets.logoGlobal,
+                              height: isMobile ? 70 : 100,
+                            ),
+                            SizedBox(width: isMobile ? 32 : 64),
                           ],
                         ),
                         const SizedBox(height: 48),
@@ -619,7 +630,9 @@ class _CandidatureScreenState extends ConsumerState<CandidatureScreen> {
         Text(
           trans.translate(AppKeys.footerGenerationVoice),
           textAlign: TextAlign.center,
-          style: GoogleFonts.montserrat(
+          style: TextStyle(
+            fontFamily: 'Montserrat',
+            fontFamilyFallback: const ['sans-serif'],
             color: AppDesignSystem.primary,
             fontSize: isMobile ? 14 : 18,
             fontWeight: FontWeight.w900,
