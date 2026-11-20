@@ -1,0 +1,11 @@
+# Le dépôt Git est la source de vérité du déploiement. Rien de local ne doit
+# partir dans une archive CLI (`vercel deploy`), en particulier les secrets
+# générés par `supabase start`.
+/supabase/.temp/
+/supabase/.branches/
+/supabase/config.toml
+/.env.local
+/.next-dev.log
+/Cahier_des_charges_Voice_Talent.pdf
+/Vibrant Sunset.pdf
+/Voice_Talent_Edition_Speciale_2026.pdf
