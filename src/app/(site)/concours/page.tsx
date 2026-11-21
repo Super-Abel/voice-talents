@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Suspense } from "react";
+import { type CSSProperties, Suspense } from "react";
+import { KineticTitle } from "@/components/site/motion/kinetics";
+import { Reveal } from "@/components/site/motion/reveal";
 import { SectionHeading } from "@/components/site/section-heading";
 import { getCachedSettings } from "@/features/settings/infrastructure/settings-repository";
 
@@ -10,21 +12,32 @@ export const metadata: Metadata = {
     "Phases, jury, vote du public et règlement de Voice Talent – Édition spéciale Douala 2026, de la première émission à la grande finale.",
 };
 
+const ANCHORS = [
+  { href: "#phases", label: "Les phases" },
+  { href: "#jury", label: "Le jury" },
+  { href: "#vote", label: "Vote" },
+  { href: "#reglement", label: "Règlement" },
+];
+
 const PHASES = [
   {
     title: "Première phase",
+    dates: "12 – 27 décembre 2026",
     text: "Prestations libres : 4 émissions de 10 candidats, à l'issue desquelles 24 candidats sont qualifiés.",
   },
   {
     title: "Battles",
+    dates: "3 – 9 janvier 2027",
     text: "12 duels sur des titres imposés : les 12 vainqueurs accèdent à la demi-finale.",
   },
   {
     title: "Demi-finale",
+    dates: "17 janvier 2027",
     text: "Les 12 demi-finalistes se disputent les 6 places de finaliste.",
   },
   {
     title: "Grande finale",
+    dates: "30 janvier 2027",
     text: "Les 6 finalistes se rencontrent sur une dernière émission : le jury désigne la voix de l'édition.",
   },
 ];
@@ -34,10 +47,17 @@ const VOTE_WEIGHTS = [
     phase: "Première phase (prestations libres)",
     public: "60 %",
     jury: "40 %",
+    publicShare: 60,
   },
-  { phase: "Battles", public: "—", jury: "100 %" },
-  { phase: "Demi-finale", public: "60 %", jury: "40 %" },
-  { phase: "Grande finale", public: "—", jury: "100 %" },
+  { phase: "Battles", public: "—", jury: "100 %", publicShare: 0 },
+  { phase: "Demi-finale", public: "60 %", jury: "40 %", publicShare: 60 },
+  { phase: "Grande finale", public: "—", jury: "100 %", publicShare: 0 },
+];
+
+const VOTE_NOTES = [
+  "Le vote du public a lieu uniquement sur le site officiel, pendant la première phase et la demi-finale.",
+  "Score final : 60 % pour la part du public, 40 % pour la note du jury.",
+  "Les égalités sont départagées par la note du jury, puis par le nombre de votes.",
 ];
 
 const RULES = [
@@ -55,41 +75,66 @@ const RULES = [
 export default function ContestPage() {
   return (
     <div className="mx-auto max-w-3xl px-4 py-10">
-      <h1 className="font-display text-5xl tracking-wide sm:text-6xl">
-        Le concours
-      </h1>
-      <p className="mt-3 text-muted">
+      <p className="vt-chip">Édition spéciale Douala 2026</p>
+      <KineticTitle
+        className="mt-5 text-5xl sm:text-6xl"
+        lines={["Le concours", "Douala 2026"]}
+        accentLine={1}
+      />
+      <span className="vt-rule mt-5 block w-40" aria-hidden="true" />
+      <p className="mt-5 text-muted">
         Voice Talent – Édition spéciale Douala suit 40 candidats de 18 à 35 ans,
         de la première émission de décembre 2026 à la grande finale du 30
         janvier 2027.
       </p>
 
-      <div className="mt-10 space-y-14">
-        <section id="phases" className="scroll-mt-24">
+      <nav aria-label="Sommaire" className="mt-8 flex flex-wrap gap-2">
+        {ANCHORS.map((anchor) => (
+          <Link
+            key={anchor.href}
+            href={anchor.href}
+            className="vt-chip transition-colors hover:border-flame-200 hover:text-ink"
+          >
+            {anchor.label}
+          </Link>
+        ))}
+      </nav>
+
+      <div className="mt-12 space-y-16">
+        <section id="phases" className="vt-scene scroll-mt-24">
           <SectionHeading intro="Quatre étapes, autant de rendez-vous avec le public.">
             Les phases
           </SectionHeading>
           <ul className="grid gap-4 sm:grid-cols-2">
             {PHASES.map((phase, index) => (
-              <li key={phase.title} className="card">
-                <span
-                  className="font-display text-3xl leading-none text-night-600"
-                  aria-hidden="true"
-                >
-                  {String(index + 1).padStart(2, "0")}
-                </span>
-                <h3 className="mt-2 font-display text-2xl tracking-wide">
-                  {phase.title}
-                </h3>
-                <p className="mt-2 text-muted">{phase.text}</p>
+              <li key={phase.title} className="h-full">
+                <Reveal delay={index * 90} y={22} className="h-full">
+                  <article className="vt-panel relative h-full p-5">
+                    <span
+                      aria-hidden="true"
+                      className="vt-outline font-display absolute top-0 right-3 text-7xl leading-none opacity-70"
+                    >
+                      {String(index + 1).padStart(2, "0")}
+                    </span>
+                    <p className="font-display text-sm tracking-[0.18em] text-flame-100 uppercase">
+                      {phase.dates}
+                    </p>
+                    <h3 className="vt-kinetic mt-2 text-2xl text-ink">
+                      <span style={{ "--vt-delay": "0ms" } as CSSProperties}>
+                        {phase.title}
+                      </span>
+                    </h3>
+                    <p className="mt-3 text-muted">{phase.text}</p>
+                  </article>
+                </Reveal>
               </li>
             ))}
           </ul>
         </section>
 
-        <section id="jury" className="scroll-mt-24">
+        <section id="jury" className="vt-scene scroll-mt-24">
           <SectionHeading>Le jury</SectionHeading>
-          <div className="card">
+          <div className="vt-panel p-5 sm:p-6">
             <p className="text-muted">
               Un jury de 2 membres note les prestations, accompagné d'un coach
               qui encadre les candidats tout au long de la compétition. Les noms
@@ -98,12 +143,12 @@ export default function ContestPage() {
           </div>
         </section>
 
-        <section id="vote" className="scroll-mt-24">
+        <section id="vote" className="vt-scene scroll-mt-24">
           <SectionHeading intro="Le score final combine le vote du public et la note du jury.">
             Vote et notation
           </SectionHeading>
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[24rem] border-collapse text-sm">
+          <div className="vt-panel overflow-x-auto p-4 sm:p-5">
+            <table className="w-full min-w-[28rem] border-collapse text-sm">
               <caption className="pb-3 text-left text-muted">
                 Répartition des voix selon les phases
               </caption>
@@ -134,9 +179,24 @@ export default function ContestPage() {
                   <tr key={row.phase} className="border-b border-night-800">
                     <th
                       scope="row"
-                      className="py-3 pr-3 text-left font-medium text-ink"
+                      className="py-3 pr-3 text-left font-normal text-ink"
                     >
                       {row.phase}
+                      <span
+                        aria-hidden="true"
+                        className="mt-2 flex h-1.5 w-36 overflow-clip rounded-full bg-night-800"
+                      >
+                        <span
+                          className="h-full"
+                          style={
+                            {
+                              width: `${row.publicShare}%`,
+                              backgroundImage: "var(--gradient-flame)",
+                            } as CSSProperties
+                          }
+                        />
+                        <span className="h-full flex-1 bg-[#7b2cbf]" />
+                      </span>
                     </th>
                     <td className="px-3 py-3 text-muted">{row.public}</td>
                     <td className="py-3 pl-3 text-muted">{row.jury}</td>
@@ -145,26 +205,23 @@ export default function ContestPage() {
               </tbody>
             </table>
           </div>
-          <p className="mt-2 text-sm text-muted">
+          <p className="mt-3 text-sm text-muted">
             — : le vote du public n'est pas ouvert pour cette phase.
           </p>
 
-          <ul className="mt-6 list-disc space-y-2 pl-5 text-muted">
-            <li>
-              Le vote du public a lieu uniquement sur le site officiel, pendant
-              la première phase et la demi-finale.
-            </li>
-            <li>
-              Score final : 60 % pour la part du public, 40 % pour la note du
-              jury.
-            </li>
-            <li>
-              Les égalités sont départagées par la note du jury, puis par le
-              nombre de votes.
-            </li>
+          <ul className="mt-6 space-y-3">
+            {VOTE_NOTES.map((note) => (
+              <li key={note} className="flex gap-3 text-muted">
+                <span
+                  aria-hidden="true"
+                  className="mt-2 size-2 shrink-0 rotate-45 bg-flame-300"
+                />
+                <span className="leading-relaxed">{note}</span>
+              </li>
+            ))}
           </ul>
 
-          <div className="card mt-6">
+          <div className="vt-panel mt-6 p-5">
             <Suspense
               fallback={
                 <div
@@ -178,11 +235,19 @@ export default function ContestPage() {
           </div>
         </section>
 
-        <section id="reglement" className="scroll-mt-24">
+        <section id="reglement" className="vt-scene scroll-mt-24">
           <SectionHeading>Le règlement</SectionHeading>
-          <ol className="list-decimal space-y-2 pl-5 text-muted">
-            {RULES.map((rule) => (
-              <li key={rule}>{rule}</li>
+          <ol className="vt-panel space-y-5 p-5 sm:p-6">
+            {RULES.map((rule, index) => (
+              <li key={rule} className="flex gap-4">
+                <span
+                  aria-hidden="true"
+                  className="vt-outline font-display shrink-0 text-2xl leading-7"
+                >
+                  {String(index + 1).padStart(2, "0")}
+                </span>
+                <span className="leading-relaxed text-muted">{rule}</span>
+              </li>
             ))}
           </ol>
           <p className="mt-4 text-sm text-muted">
@@ -192,14 +257,14 @@ export default function ContestPage() {
         </section>
       </div>
 
-      <div className="mt-12 flex flex-col gap-3 sm:flex-row">
+      <Reveal className="mt-12 flex flex-col gap-3 sm:flex-row">
         <Link href="/inscription" className="btn-flame w-full sm:w-auto">
           S'inscrire gratuitement
         </Link>
         <Link href="/contact" className="btn-ghost w-full sm:w-auto">
           Contacter l'organisation
         </Link>
-      </div>
+      </Reveal>
     </div>
   );
 }

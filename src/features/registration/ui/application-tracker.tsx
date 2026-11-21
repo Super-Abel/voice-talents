@@ -14,6 +14,14 @@ type TrackedApplication = {
   submittedAt: string;
 };
 
+/* Rail des 4 étapes ; « rejected » s'affiche hors rail, sans case. */
+const TRACK: { status: CandidateStatus; label: string }[] = [
+  { status: "received", label: "Reçu" },
+  { status: "under_review", label: "Examen" },
+  { status: "shortlisted", label: "Casting" },
+  { status: "selected", label: "Retenu" },
+];
+
 export function ApplicationTracker() {
   const [result, setResult] = useState<TrackedApplication>();
   const [error, setError] = useState<string>();
@@ -47,7 +55,7 @@ export function ApplicationTracker() {
 
   return (
     <div className="space-y-6">
-      <form action={lookup} className="card space-y-4">
+      <form action={lookup} className="vt-panel space-y-4 p-5">
         <div>
           <label htmlFor="dossierNo" className="field-label">
             Numéro de dossier
@@ -89,21 +97,62 @@ export function ApplicationTracker() {
         </p>
       )}
 
-      {result && (
-        <section className="card space-y-2" aria-live="polite">
-          <p className="text-sm text-muted">Dossier {result.dossierNo}</p>
-          <p className="font-display text-3xl tracking-wide">
-            {CANDIDATE_STATUS_LABELS[result.status]}
-          </p>
-          <p>
-            {result.firstName},{" "}
-            {CANDIDATE_STATUS_DESCRIPTIONS[result.status]
-              .charAt(0)
-              .toLowerCase()}
-            {CANDIDATE_STATUS_DESCRIPTIONS[result.status].slice(1)}
-          </p>
-        </section>
-      )}
+      {result ? <ResultCard result={result} /> : null}
     </div>
+  );
+}
+
+function ResultCard({ result }: { result: TrackedApplication }) {
+  const stage = TRACK.findIndex((step) => step.status === result.status);
+  const submitted = new Date(result.submittedAt);
+  const rejected = result.status === "rejected";
+
+  return (
+    <section className="space-y-4" aria-live="polite">
+      {stage >= 0 && (
+        <ol className="vt-steps" aria-label="Avancement du dossier">
+          {TRACK.map((step, index) => (
+            <li
+              key={step.status}
+              className="vt-step"
+              data-state={
+                index < stage ? "done" : index === stage ? "current" : "todo"
+              }
+            >
+              <span className="vt-step-rail" aria-hidden="true" />
+              <span className="vt-step-badge" aria-hidden="true">
+                {index < stage ? "✓" : index + 1}
+              </span>
+              <span>{step.label}</span>
+            </li>
+          ))}
+        </ol>
+      )}
+
+      <div className="vt-panel p-5">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <p className="font-display text-flame-100 text-xs tracking-[0.2em] uppercase">
+            Dossier {result.dossierNo}
+          </p>
+          {!Number.isNaN(submitted.getTime()) && (
+            <span className="vt-chip">
+              Déposé le{" "}
+              {new Intl.DateTimeFormat("fr-FR", { dateStyle: "long" }).format(
+                submitted,
+              )}
+            </span>
+          )}
+        </div>
+        <p
+          className={`font-display mt-3 text-2xl leading-tight ${rejected ? "text-danger" : "text-ink"}`}
+        >
+          {CANDIDATE_STATUS_LABELS[result.status]}
+        </p>
+        <p className="mt-2 text-muted">
+          {CANDIDATE_STATUS_DESCRIPTIONS[result.status]}
+        </p>
+        <p className="mt-3 text-sm text-muted">Candidat : {result.firstName}</p>
+      </div>
+    </section>
   );
 }

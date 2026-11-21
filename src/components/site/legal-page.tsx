@@ -12,17 +12,21 @@ export function LegalPage({
   children: ReactNode;
 }) {
   return (
-    <div className="mx-auto max-w-3xl px-4 py-10">
-      <h1 className="font-display text-4xl tracking-wide sm:text-5xl">
-        {title}
+    <div className="mx-auto max-w-3xl px-4 py-12 sm:py-16">
+      <p className="vt-chip">Document contractuel</p>
+      <h1 className="vt-kinetic mt-5 text-4xl text-ink sm:text-5xl">
+        <span>{title}</span>
       </h1>
-      <p className="mt-3 text-sm text-muted">
+      <span className="vt-rule mt-5 block w-40" aria-hidden="true" />
+      <p className="mt-5 text-sm text-muted">
         Dernière mise à jour : {LAST_UPDATED}
       </p>
       {intro ? (
-        <div className="mt-6 leading-relaxed text-muted">{intro}</div>
+        <div className="vt-panel mt-8 p-5 leading-relaxed text-muted sm:p-6">
+          {intro}
+        </div>
       ) : null}
-      <div className="mt-10 space-y-10">{children}</div>
+      <div className="mt-12 space-y-12">{children}</div>
     </div>
   );
 }
@@ -35,11 +39,12 @@ export function LegalSection({
   children: ReactNode;
 }) {
   return (
-    <section>
-      <h2 className="font-display text-2xl tracking-wide sm:text-3xl">
-        {title}
+    <section className="vt-scene">
+      <h2 className="vt-kinetic text-xl text-ink sm:text-2xl">
+        <span>{title}</span>
       </h2>
-      <div className="mt-3 space-y-3 leading-relaxed [&_li]:mt-2 [&_ol]:list-decimal [&_ol]:pl-5 [&_ul]:list-disc [&_ul]:pl-5">
+      <span className="vt-rule mt-3 block w-24" aria-hidden="true" />
+      <div className="mt-4 space-y-3 leading-relaxed [&_a]:text-flame-100 [&_a]:underline [&_a]:underline-offset-4 [&_li]:mt-2 [&_ol]:list-decimal [&_ol]:pl-5 [&_strong]:text-ink [&_ul]:list-disc [&_ul]:pl-5">
         {children}
       </div>
     </section>
@@ -49,7 +54,7 @@ export function LegalSection({
 /** Marqueur visible des informations que l'organisation doit fournir. */
 export function LegalPlaceholder() {
   return (
-    <span className="rounded-sm bg-night-800 px-1.5 py-0.5 font-medium text-flame-100">
+    <span className="rounded-sm border border-flame-500/45 bg-night-800 px-1.5 py-0.5 font-medium text-flame-100">
       [À compléter par l'organisation]
     </span>
   );
