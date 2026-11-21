@@ -41,7 +41,7 @@ export default function TermsPage() {
             l'adresse e-mail utilisés doivent être uniques.
           </li>
           <li>
-            Les inscriptions sont ouvertes du 21/11/2026 à 00 h 00 au 27/11/2026
+            Les inscriptions sont ouvertes du 25/11/2026 à 00 h 00 au 27/11/2026
             à 23 h 59 (heure de Douala). Aucune inscription hors délai n'est
             acceptée.
           </li>

@@ -9,9 +9,12 @@ import { RegistrationForm } from "./registration-form";
 /** Ce qu'il faut avoir sous la main avant de commencer : formats identiques à ceux vérifiés à l'envoi. */
 const PREP_ITEMS = [
   { value: "≈ 10 min", label: "Quatre étapes" },
-  { value: "JPEG · PNG", label: "Une photo (5 Mo max.)" },
-  { value: "Audio · MP4", label: "Votre prestation (50 Mo max.)" },
-  { value: "CNI", label: "Numéro de pièce d'identité" },
+  { value: "JPEG · PNG", label: "Une photo de portrait (5 Mo max.)" },
+  {
+    value: "15–30 s",
+    label: "Une vidéo de prestation (MP4 ou MOV, 40 Mo max.)",
+  },
+  { value: "1 contact", label: "Une personne à joindre en cas d'urgence" },
 ] as const;
 
 type Props = {

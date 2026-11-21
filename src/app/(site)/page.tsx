@@ -23,7 +23,7 @@ export const metadata: Metadata = {
 
 const TICKER_ITEMS = [
   "Inscriptions gratuites",
-  "21 → 27 novembre 2026",
+  "25 → 27 novembre 2026",
   "Casting en ligne 28 novembre",
   "Lancement officiel 5 décembre",
   "500 000 FCFA à gagner",
@@ -39,7 +39,7 @@ const HERO_STATS = [
 ] as const;
 
 const HERO_DATES = [
-  { label: "Inscriptions", value: "21 → 27 nov. 2026" },
+  { label: "Inscriptions", value: "25 → 27 nov. 2026" },
   { label: "Casting en ligne", value: "28 nov. 2026" },
   { label: "Lancement", value: "5 déc. 2026" },
   { label: "Première émission", value: "12 déc. 2026" },
@@ -85,14 +85,14 @@ const STEPS = [
   {
     n: "01",
     title: "Je m'inscris",
-    period: "21 → 27 novembre 2026",
-    text: "Dossier gratuit en ligne : identité, photo et un enregistrement de votre voix.",
+    period: "25 → 27 novembre 2026",
+    text: "Dossier gratuit en ligne : identité, photo de portrait et une vidéo de prestation.",
   },
   {
     n: "02",
     title: "Casting en ligne",
     period: "28 novembre 2026",
-    text: "Le jury écoute les prestations et retient 40 candidats.",
+    text: "Le jury visionne les prestations et retient 40 candidats.",
   },
   {
     n: "03",
@@ -103,7 +103,7 @@ const STEPS = [
 ] as const;
 
 const SCHEDULE = [
-  { period: "21 – 27 novembre 2026", title: "Ouverture des inscriptions" },
+  { period: "25 – 27 novembre 2026", title: "Ouverture des inscriptions" },
   { period: "28 novembre 2026", title: "Casting en ligne" },
   {
     period: "5 décembre 2026",
@@ -692,7 +692,7 @@ function FinalCtaSection() {
       <div className="relative mx-auto max-w-4xl px-4 text-center">
         <Reveal y={36}>
           <p className="vt-chip mx-auto">
-            {formatDate("2026-11-21")} → {formatDate("2026-11-27")}
+            {formatDate("2026-11-25")} → {formatDate("2026-11-27")}
           </p>
           <h2 className="vt-kinetic mt-6 text-[clamp(2.6rem,10vw,5.5rem)] text-ink">
             Votre voix mérite

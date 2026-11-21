@@ -47,14 +47,10 @@ export default function PrivacyPage() {
           </li>
           <li>
             Données de contact : numéro de téléphone, adresse e-mail, ville de
-            résidence.
+            résidence, personne à contacter (nom et numéro de téléphone).
           </li>
-          <li>
-            Pièce d'identité, utilisée pour vérifier l'âge et l'identité du
-            candidat.
-          </li>
-          <li>Photo de candidature.</li>
-          <li>Enregistrements audio et vidéo des prestations.</li>
+          <li>Photo de portrait.</li>
+          <li>Vidéos des prestations.</li>
           <li>
             Données de vote et de billetterie : numéro de téléphone payeur,
             montant, référence de transaction. Ces données sont transmises par
@@ -74,6 +70,10 @@ export default function PrivacyPage() {
           <li>Enregistrer et comptabiliser le vote du public.</li>
           <li>Émettre et contrôler les billets d'accès aux émissions.</li>
           <li>Communiquer avec les candidats, les votants et le public.</li>
+          <li>
+            Joindre la personne de confiance indiquée par le candidat lorsque
+            celui-ci est injoignable, notamment lors des convocations.
+          </li>
         </ul>
       </LegalSection>
 
@@ -148,7 +148,7 @@ export default function PrivacyPage() {
         <p>
           Seuls la photo, le nom de scène et la présentation des 40 candidats
           retenus sont rendus publics sur le site, pour permettre le vote du
-          public. Les pièces d'identité, coordonnées complètes et
+          public. Les coordonnées complètes, la personne à contacter et les
           enregistrements non diffusés ne sont jamais publiés.
         </p>
       </LegalSection>
