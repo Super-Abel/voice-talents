@@ -6,12 +6,14 @@ import {
   UPLOAD_RULES,
   type UploadKind,
   validateUpload,
+  validateUploadDuration,
 } from "../domain/upload-rules";
 import {
   compressPhoto,
   UploadError,
   uploadRegistrationFile,
 } from "./upload-file";
+import { readVideoDuration } from "./video-duration";
 
 export type UploadedFile = { id: string; name: string };
 
@@ -48,10 +50,26 @@ export function FileUploadField({
       setLocalError(problem);
       return;
     }
+    /* La durée est lue dans le fichier avant tout octet envoyé : un candidat
+       en 3G ne paie pas l'upload d'une vidéo déjà hors critères. */
+    let durationSeconds: number | null = null;
+    if (UPLOAD_RULES[kind].maxDurationSeconds) {
+      durationSeconds = await readVideoDuration(prepared);
+      const durationProblem = validateUploadDuration(kind, durationSeconds);
+      if (durationProblem) {
+        setLocalError(durationProblem);
+        return;
+      }
+    }
     setPendingName(file.name);
     setProgress(0);
     try {
-      const id = await uploadRegistrationFile(kind, prepared, setProgress);
+      const id = await uploadRegistrationFile(
+        kind,
+        prepared,
+        setProgress,
+        durationSeconds ? Math.round(durationSeconds) : undefined,
+      );
       onChange({ id, name: file.name });
     } catch (cause) {
       setLocalError(

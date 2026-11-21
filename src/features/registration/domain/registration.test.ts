@@ -95,32 +95,41 @@ describe("registrationSchema", () => {
     email: "Aicha@Example.CM ",
     city: "Douala",
     district: "Akwa",
-    idNumber: "123456789",
+    contactName: "Maman Ngono",
+    contactPhone: "6 90 11 22 33",
     photoUploadId: "8b6f1d1e-3c55-4c7c-9e43-0b3a2f1c9d10",
     musicGenre: "Afrobeat",
     songTitle: "Ma chanson",
     musicBackground: "Chorale depuis 10 ans",
-    presentationUrl: "https://www.youtube.com/watch?v=abc",
+    presentationUploadId: "1c2d3e4f-5a6b-7c8d-9e0f-1a2b3c4d5e6f",
     acceptRules: true,
   };
   it("normalise téléphone et e-mail", () => {
     const parsed = registrationSchema.parse(valid);
     expect(parsed.phone).toBe("+237671234567");
+    expect(parsed.contactPhone).toBe("+237690112233");
     expect(parsed.email).toBe("aicha@example.cm");
   });
-  it("exige une présentation (fichier ou lien)", () => {
-    const result = registrationSchema.safeParse({
-      ...valid,
-      presentationUrl: "",
-    });
-    expect(result.success).toBe(false);
-  });
-  it("refuse un lien qui n'est ni YouTube ni TikTok", () => {
+  it("exige un fichier de prestation", () => {
     expect(
       registrationSchema.safeParse({
         ...valid,
-        presentationUrl: "https://evil.example/x",
+        presentationUploadId: undefined,
       }).success,
+    ).toBe(false);
+  });
+  it("refuse un identifiant de fichier qui n'est pas un UUID", () => {
+    expect(
+      registrationSchema.safeParse({
+        ...valid,
+        presentationUploadId: "https://www.youtube.com/watch?v=abc",
+      }).success,
+    ).toBe(false);
+  });
+  it("refuse un numéro de personne à contacter non camerounais", () => {
+    expect(
+      registrationSchema.safeParse({ ...valid, contactPhone: "+33671234567" })
+        .success,
     ).toBe(false);
   });
   it("exige l'acceptation du règlement", () => {

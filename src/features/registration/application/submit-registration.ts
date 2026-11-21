@@ -9,7 +9,11 @@ import {
   REGISTRATION_CLOSED_MESSAGES,
   registrationPhase,
 } from "../domain/registration-window";
-import { UPLOAD_RULES, type UploadKind } from "../domain/upload-rules";
+import {
+  UPLOAD_RULES,
+  type UploadKind,
+  validateUploadDuration,
+} from "../domain/upload-rules";
 import type { PendingUpload, RegistrationPorts } from "./ports";
 
 export type SubmitRegistrationResult =
@@ -55,20 +59,12 @@ export async function submitRegistration(
 
   const requested: { field: string; id: string; kind: UploadKind }[] = [
     { field: "photoUploadId", id: input.photoUploadId, kind: "photo" },
-  ];
-  if (input.presentationUploadId) {
-    requested.push({
+    {
       field: "presentationUploadId",
       id: input.presentationUploadId,
       kind: "presentation",
-    });
-  }
-  if (input.idScanUploadId)
-    requested.push({
-      field: "idScanUploadId",
-      id: input.idScanUploadId,
-      kind: "id_scan",
-    });
+    },
+  ];
 
   const uploads = await ports.findUploads(requested.map((item) => item.id));
   const paths: Partial<Record<UploadKind, string>> = {};
@@ -86,8 +82,7 @@ export async function submitRegistration(
   const created = await ports.createCandidate({
     ...input,
     photoPath: paths.photo as string,
-    presentationPath: paths.presentation,
-    idScanPath: paths.id_scan,
+    presentationPath: paths.presentation as string,
     consentAt: now,
   });
   if (!created.ok) {
@@ -132,5 +127,7 @@ async function checkUpload(
   const rule = UPLOAD_RULES[kind];
   if (stored.size > rule.maxBytes || !(stored.mime in rule.types))
     return "Fichier non conforme, merci de le renvoyer.";
-  return null;
+  // Durée déclarée à l'upload, contrôlée à nouveau ici : elle n'a pas voyagé
+  // avec le fichier lui-même, mais elle reste la seule trace exploitable.
+  return validateUploadDuration(kind, upload.durationSeconds);
 }

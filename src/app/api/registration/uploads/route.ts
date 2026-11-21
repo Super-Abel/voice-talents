@@ -7,6 +7,7 @@ import {
 import {
   UPLOAD_RULES,
   validateUpload,
+  validateUploadDuration,
 } from "@/features/registration/domain/upload-rules";
 import { getFreshSettings } from "@/features/settings/infrastructure/settings-repository";
 import { CANDIDATE_FILES_BUCKET, db } from "@/lib/server/db";
@@ -15,9 +16,10 @@ import { clientIpFrom, fingerprint } from "@/lib/server/request";
 import { toDoualaDate } from "@/lib/time";
 
 const requestSchema = z.object({
-  kind: z.enum(["photo", "presentation", "id_scan"]),
+  kind: z.enum(["photo", "presentation"]),
   mime: z.string().max(100),
   size: z.number().int().positive(),
+  durationSeconds: z.number().int().positive().max(600).optional(),
 });
 
 const UPLOAD_VALIDITY_MS = 24 * 60 * 60 * 1000;
@@ -49,8 +51,15 @@ export async function POST(request: Request) {
   );
   if (!parsed.success)
     return Response.json({ error: "Requête invalide." }, { status: 400 });
-  const { kind, mime, size } = parsed.data;
-  const problem = validateUpload(kind, mime, size);
+  const { kind, mime, size, durationSeconds } = parsed.data;
+  /* La durée est déclarée par l'appareil : non vérifiable ici, elle ferme juste
+     la porte à un usage direct de l'API. Le contrôle qui compte reste celui du
+     fichier, côté navigateur avant l'envoi puis à la soumission. */
+  const problem =
+    validateUpload(kind, mime, size) ??
+    (UPLOAD_RULES[kind].maxDurationSeconds
+      ? validateUploadDuration(kind, durationSeconds ?? null)
+      : null);
   if (problem) return Response.json({ error: problem }, { status: 422 });
 
   const extension = UPLOAD_RULES[kind].types[mime];
@@ -63,6 +72,7 @@ export async function POST(request: Request) {
       kind,
       mime,
       max_bytes: UPLOAD_RULES[kind].maxBytes,
+      duration_seconds: durationSeconds ?? null,
       ip_hash: ip ? fingerprint(ip) : null,
       expires_at: new Date(now.getTime() + UPLOAD_VALIDITY_MS).toISOString(),
     })

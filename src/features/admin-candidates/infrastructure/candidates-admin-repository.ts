@@ -42,7 +42,9 @@ export type CandidateDetail = {
   email: string;
   city: string;
   district: string;
-  id_number: string;
+  contact_name: string | null;
+  contact_phone: string | null;
+  id_number: string | null;
   id_scan_path: string | null;
   photo_path: string;
   music_genre: string;
@@ -86,6 +88,23 @@ export async function signedFileUrls(
     if (entry.path && entry.signedUrl) urls[entry.path] = entry.signedUrl;
   }
   return urls;
+}
+
+/** Durée déclarée à l'envoi de la vidéo de prestation ; null pour les dossiers plus anciens. */
+export async function presentationDuration(
+  candidateId: string,
+): Promise<number | null> {
+  const { data, error } = await db()
+    .from("uploads")
+    .select("duration_seconds")
+    .eq("candidate_id", candidateId)
+    .eq("kind", "presentation")
+    .not("duration_seconds", "is", null)
+    .order("issued_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (error) throw error;
+  return data ? Number(data.duration_seconds) : null;
 }
 
 export type StatusChange = {

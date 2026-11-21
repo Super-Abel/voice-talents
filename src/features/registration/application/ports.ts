@@ -7,6 +7,7 @@ export type PendingUpload = {
   kind: UploadKind;
   mime: string;
   maxBytes: number;
+  durationSeconds: number | null;
   usedAt: string | null;
   expiresAt: string;
 };
@@ -22,8 +23,7 @@ export type RegistrationPolicy = {
 
 export type NewCandidate = Registration & {
   photoPath: string;
-  presentationPath?: string;
-  idScanPath?: string;
+  presentationPath: string;
   consentAt: Date;
 };
 
