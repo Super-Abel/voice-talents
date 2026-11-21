@@ -27,8 +27,18 @@ const socialLink = z
     "Lien invalide (doit commencer par https://)",
   );
 
-export const PRESENTATION_URL_PATTERN =
-  /^https:\/\/([a-z]+\.)?(youtube\.com|youtu\.be|tiktok\.com)\/\S+$/;
+const cameroonMobile = (requiredLabel: string) =>
+  z.string({ error: requiredLabel }).transform((value, ctx) => {
+    const normalized = normalizeCameroonMobile(value);
+    if (!normalized) {
+      ctx.addIssue({
+        code: "custom",
+        message: "Numéro mobile camerounais attendu (ex. 6 71 23 45 67)",
+      });
+      return z.NEVER;
+    }
+    return normalized;
+  });
 
 export const identityFields = z.object({
   lastName: requiredText("Nom", 80),
@@ -39,17 +49,7 @@ export const identityFields = z.object({
 });
 
 export const contactFields = z.object({
-  phone: z.string({ error: "Téléphone requis" }).transform((value, ctx) => {
-    const normalized = normalizeCameroonMobile(value);
-    if (!normalized) {
-      ctx.addIssue({
-        code: "custom",
-        message: "Numéro mobile camerounais attendu (ex. 6 71 23 45 67)",
-      });
-      return z.NEVER;
-    }
-    return normalized;
-  }),
+  phone: cameroonMobile("Téléphone requis"),
   email: z
     .string({ error: "E-mail requis" })
     .trim()
@@ -57,16 +57,12 @@ export const contactFields = z.object({
     .pipe(z.email("Adresse e-mail invalide").max(160)),
   city: requiredText("Ville", 80),
   district: requiredText("Quartier", 80),
-  idNumber: z
-    .string({ error: "Numéro de pièce d'identité requis" })
-    .trim()
-    .min(4, "Numéro de pièce d'identité invalide")
-    .max(40, "Numéro de pièce d'identité invalide"),
-  idScanUploadId: z.uuid().optional(),
+  contactName: requiredText("Personne à contacter", 80),
+  contactPhone: cameroonMobile("Téléphone de la personne à contacter requis"),
+  photoUploadId: z.uuid({ error: "Ajoutez votre photo de portrait" }),
 });
 
 export const musicFields = z.object({
-  photoUploadId: z.uuid({ error: "Ajoutez votre photo" }),
   musicGenre: requiredText("Genre musical", 60),
   songTitle: requiredText("Chanson envisagée", 150),
   musicBackground: requiredText("Parcours musical", 1000),
@@ -78,16 +74,9 @@ export const musicFields = z.object({
       youtube: socialLink,
     })
     .prefault({}),
-  presentationUploadId: z.uuid().optional(),
-  presentationUrl: z
-    .string()
-    .trim()
-    .optional()
-    .transform((value) => value || undefined)
-    .refine(
-      (value) => !value || PRESENTATION_URL_PATTERN.test(value),
-      "Lien YouTube ou TikTok invalide",
-    ),
+  presentationUploadId: z.uuid({
+    error: "Ajoutez votre vidéo de prestation",
+  }),
 });
 
 export const consentFields = z.object({
@@ -100,11 +89,7 @@ export const consentFields = z.object({
 export const registrationSchema = identityFields
   .extend(contactFields.shape)
   .extend(musicFields.shape)
-  .extend(consentFields.shape)
-  .refine((data) => data.presentationUploadId || data.presentationUrl, {
-    path: ["presentationUrl"],
-    message: "Ajoutez un fichier audio/vidéo ou un lien YouTube/TikTok",
-  });
+  .extend(consentFields.shape);
 
 export type RegistrationInput = z.input<typeof registrationSchema>;
 export type Registration = z.output<typeof registrationSchema>;

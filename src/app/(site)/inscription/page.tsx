@@ -34,8 +34,9 @@ export default function RegistrationPage() {
 
         <p className="mt-4 text-lg text-muted">
           Ouverte aux chanteuses et chanteurs de 18 à 35 ans. Un seul dossier
-          par personne. Prévoyez environ 10 minutes, une photo et un
-          enregistrement de votre voix (fichier ou lien YouTube/TikTok).
+          par personne. Prévoyez environ 10 minutes, une photo de portrait, une
+          vidéo de 15 à 30 secondes et le numéro d&rsquo;une personne à
+          contacter.
         </p>
 
         <div className="mt-10">

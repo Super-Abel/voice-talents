@@ -15,7 +15,7 @@ import {
 import { FileUploadField, type UploadedFile } from "./file-upload-field";
 import { TurnstileWidget } from "./turnstile-widget";
 
-const DRAFT_KEY = "vt-registration-draft-v1";
+const DRAFT_KEY = "vt-registration-draft-v2";
 
 type Draft = {
   lastName: string;
@@ -27,8 +27,8 @@ type Draft = {
   email: string;
   city: string;
   district: string;
-  idNumber: string;
-  idScan?: UploadedFile;
+  contactName: string;
+  contactPhone: string;
   photo?: UploadedFile;
   musicGenre: string;
   songTitle: string;
@@ -37,9 +37,7 @@ type Draft = {
   instagram: string;
   tiktok: string;
   youtube: string;
-  presentationMode: "file" | "link";
   presentation?: UploadedFile;
-  presentationUrl: string;
   acceptRules: boolean;
 };
 
@@ -53,7 +51,8 @@ const EMPTY_DRAFT: Draft = {
   email: "",
   city: "",
   district: "",
-  idNumber: "",
+  contactName: "",
+  contactPhone: "",
   musicGenre: "",
   songTitle: "",
   musicBackground: "",
@@ -61,8 +60,6 @@ const EMPTY_DRAFT: Draft = {
   instagram: "",
   tiktok: "",
   youtube: "",
-  presentationMode: "file",
-  presentationUrl: "",
   acceptRules: false,
 };
 
@@ -91,8 +88,8 @@ function toPayload(draft: Draft) {
     email: draft.email,
     city: draft.city,
     district: draft.district,
-    idNumber: draft.idNumber,
-    idScanUploadId: draft.idScan?.id,
+    contactName: draft.contactName,
+    contactPhone: draft.contactPhone,
     photoUploadId: draft.photo?.id,
     musicGenre: draft.musicGenre,
     songTitle: draft.songTitle,
@@ -103,10 +100,7 @@ function toPayload(draft: Draft) {
       tiktok: draft.tiktok,
       youtube: draft.youtube,
     },
-    presentationUploadId:
-      draft.presentationMode === "file" ? draft.presentation?.id : undefined,
-    presentationUrl:
-      draft.presentationMode === "link" ? draft.presentationUrl : undefined,
+    presentationUploadId: draft.presentation?.id,
     acceptRules: draft.acceptRules,
   };
 }
@@ -127,27 +121,20 @@ const STEPS: Step[] = [
       "email",
       "city",
       "district",
-      "idNumber",
-      "idScanUploadId",
+      "contactName",
+      "contactPhone",
+      "photoUploadId",
     ],
   },
   {
     title: "Profil musical",
-    schema: musicFields.refine(
-      (data) => data.presentationUploadId || data.presentationUrl,
-      {
-        path: ["presentationUrl"],
-        message: "Ajoutez un fichier audio/vidéo ou un lien YouTube/TikTok",
-      },
-    ),
+    schema: musicFields,
     fields: [
-      "photoUploadId",
       "musicGenre",
       "songTitle",
       "musicBackground",
       "socialLinks",
       "presentationUploadId",
-      "presentationUrl",
     ],
   },
   { title: "Validation", schema: consentFields, fields: ["acceptRules"] },
@@ -478,20 +465,31 @@ export function RegistrationForm({
                 onChange={(v) => update("district", v)}
               />
               <TextField
-                label="N° de pièce d'identité (CNI, passeport…)"
-                name="idNumber"
-                value={draft.idNumber}
-                error={errors.idNumber}
-                onChange={(v) => update("idNumber", v)}
+                label="Personne à contacter"
+                name="contactName"
+                hint="Une personne de confiance si nous ne parvenons pas à vous joindre."
+                value={draft.contactName}
+                error={errors.contactName}
+                onChange={(v) => update("contactName", v)}
+              />
+              <TextField
+                label="Téléphone de la personne à contacter"
+                name="contactPhone"
+                type="tel"
+                inputMode="tel"
+                placeholder="6 71 23 45 67"
+                value={draft.contactPhone}
+                error={errors.contactPhone}
+                onChange={(v) => update("contactPhone", v)}
               />
               <div className="sm:col-span-2">
                 <FileUploadField
-                  kind="id_scan"
-                  label="Scan de la pièce d'identité"
-                  optional
-                  value={draft.idScan}
-                  error={errors.idScanUploadId}
-                  onChange={(v) => update("idScan", v)}
+                  kind="photo"
+                  label="Photo de portrait"
+                  capture="user"
+                  value={draft.photo}
+                  error={errors.photoUploadId}
+                  onChange={(v) => update("photo", v)}
                 />
               </div>
             </div>
@@ -499,16 +497,6 @@ export function RegistrationForm({
 
           {step === 2 && (
             <div className="grid gap-4 sm:grid-cols-2">
-              <div className="sm:col-span-2">
-                <FileUploadField
-                  kind="photo"
-                  label="Votre photo"
-                  capture="user"
-                  value={draft.photo}
-                  error={errors.photoUploadId}
-                  onChange={(v) => update("photo", v)}
-                />
-              </div>
               <TextField
                 label="Genre musical"
                 name="musicGenre"
@@ -540,56 +528,15 @@ export function RegistrationForm({
                 />
               </div>
 
-              <fieldset className="space-y-3 sm:col-span-2">
-                <legend className="field-label">
-                  Votre prestation (casting en ligne)
-                </legend>
-                <div className="flex gap-3">
-                  {(
-                    [
-                      ["file", "Envoyer un fichier"],
-                      ["link", "Donner un lien"],
-                    ] as const
-                  ).map(([value, label]) => (
-                    <label
-                      key={value}
-                      className="flex min-h-12 flex-1 cursor-pointer items-center gap-3 rounded-md border border-night-700 px-4 text-sm has-[:checked]:border-flame-100 has-[:checked]:bg-night-800"
-                    >
-                      <input
-                        type="radio"
-                        name="presentationMode"
-                        value={value}
-                        checked={draft.presentationMode === value}
-                        onChange={() => update("presentationMode", value)}
-                        className="accent-[var(--flame-200)]"
-                      />
-                      {label}
-                    </label>
-                  ))}
-                </div>
-                {draft.presentationMode === "file" ? (
-                  <FileUploadField
-                    kind="presentation"
-                    label="Fichier audio ou vidéo"
-                    value={draft.presentation}
-                    error={
-                      errors.presentationUploadId ?? errors.presentationUrl
-                    }
-                    onChange={(v) => update("presentation", v)}
-                  />
-                ) : (
-                  <TextField
-                    label="Lien YouTube ou TikTok"
-                    name="presentationUrl"
-                    type="url"
-                    inputMode="url"
-                    placeholder="https://www.youtube.com/watch?v=…"
-                    value={draft.presentationUrl}
-                    error={errors.presentationUrl}
-                    onChange={(v) => update("presentationUrl", v)}
-                  />
-                )}
-              </fieldset>
+              <div className="sm:col-span-2">
+                <FileUploadField
+                  kind="presentation"
+                  label="Votre prestation (casting en ligne)"
+                  value={draft.presentation}
+                  error={errors.presentationUploadId}
+                  onChange={(v) => update("presentation", v)}
+                />
+              </div>
 
               <details className="sm:col-span-2">
                 <summary className="cursor-pointer py-2 text-sm font-medium text-flame-100">
@@ -829,18 +776,24 @@ function Summary({
       value: `${draft.city}, ${draft.district}`,
     },
     {
+      step: 1,
+      label: "Personne à contacter",
+      value: `${draft.contactName} · ${draft.contactPhone}`,
+    },
+    {
+      step: 1,
+      label: "Portrait",
+      value: draft.photo?.name ?? "—",
+    },
+    {
       step: 2,
       label: "Genre / chanson",
       value: `${draft.musicGenre} · ${draft.songTitle}`,
     },
-    { step: 2, label: "Photo", value: draft.photo?.name ?? "—" },
     {
       step: 2,
       label: "Prestation",
-      value:
-        draft.presentationMode === "file"
-          ? (draft.presentation?.name ?? "—")
-          : draft.presentationUrl,
+      value: draft.presentation?.name ?? "—",
     },
   ];
   return (

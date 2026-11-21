@@ -63,9 +63,10 @@ const VOTE_NOTES = [
 const RULES = [
   "Avoir entre 18 et 35 ans révolus à la date de clôture des inscriptions.",
   "L'inscription est gratuite et limitée à un seul dossier par personne : le téléphone et l'adresse e-mail doivent être uniques.",
-  "Les inscriptions sont ouvertes du 21/11/2026 à 00 h 00 au 27/11/2026 à 23 h 59 (heure de Douala) ; aucune inscription hors délai n'est acceptée.",
+  "Les inscriptions sont ouvertes du 25/11/2026 à 00 h 00 au 27/11/2026 à 23 h 59 (heure de Douala) ; aucune inscription hors délai n'est acceptée.",
   "Les informations fournies doivent être exactes : toute fausse déclaration entraîne l'exclusion du candidat.",
   "Le casting en ligne se tient le 28/11/2026 ; 40 candidats sont retenus.",
+  "La vidéo de prestation déposée à l'inscription dure de 15 à 30 secondes et pèse 40 Mo maximum ; une vidéo hors ces limites n'est pas acceptée.",
   "Chaque candidat respecte le calendrier et les consignes de l'organisation.",
   "Les décisions du jury sont souveraines.",
   "L'organisation peut utiliser l'image et les prestations des candidats pour la promotion du concours.",

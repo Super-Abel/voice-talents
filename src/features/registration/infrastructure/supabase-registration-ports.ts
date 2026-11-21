@@ -25,7 +25,9 @@ export const supabaseRegistrationPorts: RegistrationPorts = {
   async findUploads(ids): Promise<PendingUpload[]> {
     const { data, error } = await db()
       .from("uploads")
-      .select("id, path, kind, mime, max_bytes, used_at, expires_at")
+      .select(
+        "id, path, kind, mime, max_bytes, duration_seconds, used_at, expires_at",
+      )
       .in("id", ids);
     if (error) throw error;
     return data.map((row) => ({
@@ -34,6 +36,8 @@ export const supabaseRegistrationPorts: RegistrationPorts = {
       kind: row.kind,
       mime: row.mime,
       maxBytes: row.max_bytes,
+      durationSeconds:
+        row.duration_seconds === null ? null : Number(row.duration_seconds),
       usedAt: row.used_at,
       expiresAt: row.expires_at,
     }));
@@ -70,15 +74,14 @@ export const supabaseRegistrationPorts: RegistrationPorts = {
         email: candidate.email,
         city: candidate.city,
         district: candidate.district,
-        id_number: candidate.idNumber,
-        id_scan_path: candidate.idScanPath ?? null,
+        contact_name: candidate.contactName,
+        contact_phone: candidate.contactPhone,
         photo_path: candidate.photoPath,
         music_genre: candidate.musicGenre,
         song_title: candidate.songTitle,
         music_background: candidate.musicBackground,
         social_links: candidate.socialLinks,
-        presentation_path: candidate.presentationPath ?? null,
-        presentation_url: candidate.presentationUrl ?? null,
+        presentation_path: candidate.presentationPath,
         consent_at: candidate.consentAt.toISOString(),
       })
       .select("id, dossier_no")

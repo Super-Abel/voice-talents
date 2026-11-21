@@ -7,6 +7,7 @@ import { updateCandidatesStatus } from "@/features/admin-candidates/actions";
 import {
   candidateHistory,
   getCandidate,
+  presentationDuration,
   signedFileUrls,
 } from "@/features/admin-candidates/infrastructure/candidates-admin-repository";
 import { StatusBadge } from "@/features/admin-candidates/ui/status-badge";
@@ -34,7 +35,7 @@ export default async function CandidateDetailPage({
   const candidate = await getCandidate(id);
   if (!candidate) notFound();
 
-  const [urls, history, settings, query] = await Promise.all([
+  const [urls, history, settings, query, declaredDuration] = await Promise.all([
     signedFileUrls([
       candidate.photo_path,
       candidate.presentation_path,
@@ -43,6 +44,7 @@ export default async function CandidateDetailPage({
     candidateHistory(candidate.id),
     getCachedSettings(),
     searchParams,
+    presentationDuration(candidate.id),
   ]);
   const photoUrl = urls[candidate.photo_path];
   const presentationUrl = candidate.presentation_path
@@ -152,22 +154,40 @@ export default async function CandidateDetailPage({
             <Row label="Ville / quartier">
               {candidate.city}, {candidate.district}
             </Row>
-            <Row label="Pièce d'identité">
-              {candidate.id_number}
-              {idScanUrl && (
+            <Row label="Personne à contacter">
+              {candidate.contact_name && candidate.contact_phone ? (
                 <>
-                  {" · "}
+                  {candidate.contact_name} ·{" "}
                   <a
-                    href={idScanUrl}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="text-flame-100 underline"
+                    href={`tel:${candidate.contact_phone}`}
+                    className="underline"
                   >
-                    voir le scan
+                    {formatCameroonMobile(candidate.contact_phone)}
                   </a>
                 </>
+              ) : (
+                <span className="text-muted">Non renseignée.</span>
               )}
             </Row>
+            {/* Dossiers déposés avant le retrait de la CNI du formulaire. */}
+            {candidate.id_number && (
+              <Row label="Pièce d'identité">
+                {candidate.id_number}
+                {idScanUrl && (
+                  <>
+                    {" · "}
+                    <a
+                      href={idScanUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-flame-100 underline"
+                    >
+                      voir le scan
+                    </a>
+                  </>
+                )}
+              </Row>
+            )}
             <Row label="Inscrit le">{formatDateTime(candidate.created_at)}</Row>
             <Row label="Consentement">
               {formatDateTime(candidate.consent_at)}
@@ -206,7 +226,16 @@ export default async function CandidateDetailPage({
             </ul>
           )}
           <div>
-            <h3 className="field-label">Prestation</h3>
+            <h3 className="field-label">
+              Prestation
+              {declaredDuration !== null && (
+                /* Annoncée par l'appareil du candidat à l'envoi, pas mesurée ici. */
+                <span className="font-sans text-sm normal-case text-muted">
+                  {" "}
+                  · durée annoncée : {declaredDuration} s
+                </span>
+              )}
+            </h3>
             {presentationUrl ? (
               isVideo ? (
                 // biome-ignore lint/a11y/useMediaCaption: prestation brute envoyée par le candidat, sans sous-titres

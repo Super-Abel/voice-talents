@@ -39,11 +39,17 @@ export async function uploadRegistrationFile(
   kind: UploadKind,
   file: File,
   onProgress: (ratio: number) => void,
+  durationSeconds?: number,
 ): Promise<string> {
   const response = await fetch("/api/registration/uploads", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ kind, mime: file.type, size: file.size }),
+    body: JSON.stringify({
+      kind,
+      mime: file.type,
+      size: file.size,
+      durationSeconds,
+    }),
   });
   const payload = (await response.json().catch(() => ({}))) as {
     uploadId?: string;
