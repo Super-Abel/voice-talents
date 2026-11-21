@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { AdminNavLink } from "@/components/admin/admin-nav-link";
 import { getAdminSession } from "@/features/admin-auth/access";
 import { logout } from "@/features/admin-auth/actions";
 import {
@@ -40,12 +41,7 @@ export async function AdminNav() {
         <ul className="flex flex-wrap gap-1 text-sm">
           {items.map((item) => (
             <li key={item.href}>
-              <Link
-                href={item.href}
-                className="block rounded-md px-3 py-2 text-muted hover:bg-night-800 hover:text-ink"
-              >
-                {item.label}
-              </Link>
+              <AdminNavLink href={item.href}>{item.label}</AdminNavLink>
             </li>
           ))}
         </ul>

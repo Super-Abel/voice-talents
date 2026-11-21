@@ -18,7 +18,9 @@ export default async function DashboardPage() {
   return (
     <div className="space-y-8">
       <div className="flex flex-wrap items-end justify-between gap-4">
-        <h1 className="font-display text-4xl tracking-wide">Tableau de bord</h1>
+        <h1 className="vt-kinetic text-4xl text-ink">
+          <span>Tableau de bord</span>
+        </h1>
         <Link href="/admin/inscrits" className="btn-flame">
           Voir les inscrits
         </Link>
@@ -66,10 +68,13 @@ export default async function DashboardPage() {
                 <span className="text-muted">
                   {formatDate(`${day.day}T12:00:00+01:00`)}
                 </span>
-                <span className="h-3 rounded-full bg-night-800">
+                <span className="h-3 overflow-clip rounded-full bg-night-800">
                   <span
-                    className="block h-full rounded-full bg-flame-200"
-                    style={{ width: `${(day.count / maxDay) * 100}%` }}
+                    className="block h-full rounded-full"
+                    style={{
+                      width: `${(day.count / maxDay) * 100}%`,
+                      backgroundImage: "var(--gradient-flame)",
+                    }}
                   />
                 </span>
                 <span className="text-right tabular-nums">{day.count}</span>

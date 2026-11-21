@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { Logo } from "@/components/site/logo";
 
 export function AuthCard({
   title,
@@ -10,13 +11,14 @@ export function AuthCard({
   children: ReactNode;
 }) {
   return (
-    <main className="flex flex-1 items-center justify-center px-4 py-10">
-      <div className="card w-full max-w-md space-y-5">
+    <main className="flex flex-1 flex-col items-center justify-center gap-6 px-4 py-10">
+      <Logo className="h-10" />
+      <div className="vt-panel w-full max-w-md space-y-5 p-5 sm:p-6">
         <div>
-          <p className="text-sm font-medium uppercase tracking-wider text-flame-100">
-            Back-office Voice Talent
-          </p>
-          <h1 className="mt-1 font-display text-4xl tracking-wide">{title}</h1>
+          <p className="vt-chip">Back-office Voice Talent</p>
+          <h1 className="vt-kinetic mt-3 text-4xl text-ink">
+            <span>{title}</span>
+          </h1>
           {intro && <div className="mt-2 text-sm text-muted">{intro}</div>}
         </div>
         {children}

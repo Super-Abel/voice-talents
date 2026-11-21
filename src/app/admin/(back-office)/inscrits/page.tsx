@@ -71,7 +71,9 @@ export default async function CandidatesPage({
     <div className="space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="font-display text-4xl tracking-wide">Inscrits</h1>
+          <h1 className="vt-kinetic text-4xl text-ink">
+            <span>Inscrits</span>
+          </h1>
           <p className="text-muted">
             {total} dossier{total > 1 ? "s" : ""}{" "}
             {hasFilters ? "correspondant aux filtres" : ""}
