@@ -619,14 +619,15 @@ function LegacySection() {
             <li key={person.name} className="h-full">
               <Reveal delay={index * 110} y={22} className="h-full">
                 <figure className="vt-portrait h-full">
-                  {/* Les visuels sont des webp déjà compressés servis depuis /public :
-                      pas de sharp dans le projet, donc next/image n'apporterait rien. */}
-                  {/* biome-ignore lint/performance/noImgElement: images pré-optimisées, sans dépendance d'optimisation runtime. */}
+                  {/* next/image est écarté ici : pnpm refuse le build de sharp
+                      (allowBuilds.sharp = false), donc l'optimiseur renverrait une
+                      erreur 500 en local. Les webp sont encodés à la taille d'affichage. */}
+                  {/* biome-ignore lint/performance/noImgElement: visuel 760 px, 22 Ko, déjà à taille. */}
                   <img
                     src={person.src}
                     alt={`${person.name}, ${person.rank} de la saison précédente`}
-                    width={1100}
-                    height={733}
+                    width={760}
+                    height={506}
                     loading="lazy"
                     decoding="async"
                     style={{ objectPosition: person.position }}

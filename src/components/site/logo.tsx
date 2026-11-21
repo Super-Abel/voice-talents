@@ -12,13 +12,14 @@ export function Logo({ className = "h-11" }: { className?: string }) {
       className="vt-mark-group flex items-center"
       aria-label="Voice Talent – accueil"
     >
-      {/* Le projet n'a pas de sharp : next/image n'optimiserait rien de plus. */}
-      {/* biome-ignore lint/performance/noImgElement: visuel pré-optimisé (320 px, 22 Ko). */}
+      {/* Le lockup affiche ~44 px de haut : 240 px de large suffit, et sharp est
+          refusé par pnpm, donc next/image n'apporterait que des erreurs 500. */}
+      {/* biome-ignore lint/performance/noImgElement: visuel 240 px, 10 Ko, déjà à taille. */}
       <img
         src={LOGO_SRC}
         alt="Voice Talent – The Bridge"
-        width={320}
-        height={177}
+        width={240}
+        height={132}
         decoding="async"
         className={`vt-mark w-auto ${className}`}
       />
