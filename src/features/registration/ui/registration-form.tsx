@@ -278,6 +278,14 @@ export function RegistrationForm({
     );
 
   const isLast = step === STEPS.length - 1;
+  /* Identifiant gravé sur la photo et la vidéo avant l'envoi : le dossier
+     n'a pas encore de numéro à ce moment, le nom et le téléphone restent les
+     seuls repères que le back-office sait retrouver. */
+  const mediaIdentity = {
+    firstName: draft.firstName,
+    lastName: draft.lastName,
+    phone: draft.phone,
+  };
 
   return (
     <div className="space-y-6">
@@ -487,6 +495,7 @@ export function RegistrationForm({
                   kind="photo"
                   label="Photo de portrait"
                   capture="user"
+                  identity={mediaIdentity}
                   value={draft.photo}
                   error={errors.photoUploadId}
                   onChange={(v) => update("photo", v)}
@@ -532,6 +541,7 @@ export function RegistrationForm({
                 <FileUploadField
                   kind="presentation"
                   label="Votre prestation (casting en ligne)"
+                  identity={mediaIdentity}
                   value={draft.presentation}
                   error={errors.presentationUploadId}
                   onChange={(v) => update("presentation", v)}

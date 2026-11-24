@@ -21,6 +21,8 @@ export const UPLOAD_RULES: Record<
     maxBytes: number;
     types: Record<string, string>;
     label: string;
+    /** Dit au candidat quoi produire quand ni son téléphone ni le jury ne liront le fichier. */
+    unreadableHint: string;
     minDurationSeconds?: number;
     maxDurationSeconds?: number;
   }
@@ -29,6 +31,8 @@ export const UPLOAD_RULES: Record<
     maxBytes: 5 * MB,
     types: IMAGE_TYPES,
     label: "Photo de portrait (JPEG, PNG ou WebP, 5 Mo max.)",
+    unreadableHint:
+      "Cette image n'est pas lisible sur cet appareil. Reprenez le portrait ou exportez-le en JPEG.",
   },
   presentation: {
     // 30 s en 1080p tient largement sous 40 Mo ; au-delà, c'est une autre vidéo.
@@ -37,6 +41,8 @@ export const UPLOAD_RULES: Record<
     minDurationSeconds: 15,
     maxDurationSeconds: 30,
     label: "Vidéo de 15 à 30 secondes (MP4, MOV, WebM ou 3GP, 40 Mo max.)",
+    unreadableHint:
+      "Cette vidéo n'est pas lisible sur cet appareil, donc le jury ne pourrait pas la voir. Réenregistrez-la en MP4 (H.264).",
   },
 };
 
