@@ -11,7 +11,7 @@
     "test": "vitest run",
     "test:db": "node scripts/test-db.mjs supabase/migrations",
     "typecheck": "tsc --noEmit",
-    "admin:create": "tsx scripts/create-super-admin.ts"
+    "admin:create": "tsx scripts/create-super-admin.mts"
   },
   "dependencies": {
     "@node-rs/argon2": "2.2.2",

@@ -1,4 +1,4 @@
-// Usage : pnpm admin:create -- --email direction@exemple.cm --name "Direction"
+// Usage : pnpm admin:create --email direction@exemple.cm --name "Direction"
 import { randomInt } from "node:crypto";
 import { parseArgs } from "node:util";
 import { hash } from "@node-rs/argon2";
