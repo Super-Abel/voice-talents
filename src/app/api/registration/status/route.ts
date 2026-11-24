@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { normalizeCameroonMobile } from "@/features/registration/domain/phone";
-import { db } from "@/lib/server/db";
+import { BackendError, lookupStatusFromBackend } from "@/lib/server/backend";
 import { allowRequest } from "@/lib/server/rate-limit";
 import { clientIpFrom } from "@/lib/server/request";
 
@@ -13,6 +13,8 @@ const lookupSchema = z.object({
   phone: z.string().max(30),
 });
 
+/* Toute réponse négative se ressemble : un tiers ne doit pas deviner si le
+   numéro de dossier existe sans le téléphone associé. */
 const NOT_FOUND = "Aucun dossier ne correspond à ce numéro et ce téléphone.";
 
 export async function POST(request: Request) {
@@ -39,23 +41,20 @@ export async function POST(request: Request) {
   )
     return tooMany;
 
-  const { data, error } = await db()
-    .from("candidates")
-    .select("dossier_no, first_name, status, created_at, status_changed_at")
-    .eq("dossier_no", parsed.data.dossierNo)
-    .eq("phone", phone)
-    .maybeSingle();
-  if (error) throw error;
-  if (!data) return Response.json({ error: NOT_FOUND }, { status: 404 });
-
-  return Response.json(
-    {
-      dossierNo: data.dossier_no,
-      firstName: data.first_name,
-      status: data.status,
-      submittedAt: data.created_at,
-      updatedAt: data.status_changed_at,
-    },
-    { headers: { "Cache-Control": "no-store" } },
-  );
+  try {
+    const application = await lookupStatusFromBackend({
+      dossierNo: parsed.data.dossierNo,
+      phone,
+    });
+    return Response.json(application, {
+      headers: { "Cache-Control": "no-store" },
+    });
+  } catch (error) {
+    if (error instanceof BackendError && error.isClientError)
+      return Response.json({ error: NOT_FOUND }, { status: 404 });
+    return Response.json(
+      { error: "Recherche temporairement indisponible. Réessayez." },
+      { status: 503 },
+    );
+  }
 }

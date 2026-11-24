@@ -4,6 +4,9 @@ import { z } from "zod";
 const serverEnvSchema = z.object({
   SUPABASE_URL: z.url(),
   SUPABASE_SERVICE_ROLE_KEY: z.string().min(20),
+  BACKEND_API_URL: z.url(),
+  BACKEND_ADMIN_USERNAME: z.string().min(1),
+  BACKEND_ADMIN_PASSWORD: z.string().min(1),
   APP_AUTH_SECRET: z
     .string()
     .min(32, "APP_AUTH_SECRET doit contenir au moins 32 caractères"),

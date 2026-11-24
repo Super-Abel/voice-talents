@@ -17,6 +17,7 @@ const ACTION_LABELS: Record<string, string> = {
   "auth.mfa_enrolled": "2FA activée",
   "auth.password_changed": "Mot de passe modifié",
   "candidate.status_changed": "Statut de dossier modifié",
+  "application.reviewed": "Note du jury enregistrée",
   "candidates.exported": "Export des inscrits",
   "setting.updated": "Paramètre modifié",
   "admin_user.created": "Compte créé",

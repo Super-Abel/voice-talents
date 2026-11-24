@@ -1,5 +1,8 @@
 import { z } from "zod";
-import { CANDIDATE_STATUSES } from "@/features/registration/domain/candidate-status";
+import {
+  CANDIDATE_STATUSES,
+  type CandidateStatus,
+} from "@/features/registration/domain/candidate-status";
 import { birthDateBounds } from "@/features/registration/domain/eligibility";
 
 export const SORTABLE_COLUMNS = [
@@ -56,39 +59,112 @@ export function parseCandidateFilters(
   return candidateFiltersSchema.parse(flat);
 }
 
-/** Paramètres de la fonction SQL admin_list_candidates. L'âge est calculé à la date de référence (clôture). */
-export function toListParams(
+/**
+ * Le backend ne filtre que par statut, sexe et texte libre : la ville, le
+ * genre, les âges, la période d'inscription, le tri et la pagination sont
+ * appliqués ici, sur la liste complète qu'il renvoie.
+ */
+export type FilterableApplication = {
+  dossierNo: string;
+  firstName: string;
+  lastName: string;
+  stageName: string | null;
+  birthDate: string;
+  phone: string;
+  email: string;
+  city: string;
+  musicGenre: string;
+  status: CandidateStatus;
+  submittedAt: string;
+};
+
+/** Comparaison insensible à la casse et aux accents, comme l'ILIKE de SQL. */
+const fold = (value: string): string =>
+  value.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().trim();
+
+/** Minuit, heure de Douala, d'un jour donné éventuellement décalé. */
+const doualaMidnight = (date: string, addDays = 0): number =>
+  Date.parse(`${date}T00:00:00+01:00`) + addDays * 86_400_000;
+
+export function matchesFilters(
+  row: FilterableApplication,
   filters: CandidateFilters,
   ageReferenceDate: string,
-  limit: number,
-  offset: number,
-) {
-  const bounds =
-    filters.ageMin !== undefined || filters.ageMax !== undefined
-      ? birthDateBounds(
-          ageReferenceDate,
-          filters.ageMin ?? 0,
-          filters.ageMax ?? 120,
-        )
-      : null;
-  const dayAfter = (date: string) =>
-    new Date(Date.parse(`${date}T00:00:00+01:00`) + 86_400_000).toISOString();
-  return {
-    p_q: filters.q ?? null,
-    p_status: filters.status ?? null,
-    p_city: filters.city ?? null,
-    p_genre: filters.genre ?? null,
-    p_birth_from: bounds?.min ?? null,
-    p_birth_to: bounds?.max ?? null,
-    p_created_from: filters.from
-      ? new Date(`${filters.from}T00:00:00+01:00`).toISOString()
-      : null,
-    p_created_to: filters.to ? dayAfter(filters.to) : null,
-    p_sort: filters.sort,
-    p_desc: filters.dir === "desc",
-    p_limit: limit,
-    p_offset: offset,
+): boolean {
+  if (filters.status && row.status !== filters.status) return false;
+  /* Ville et genre sont des valeurs choisies dans la liste du tableau de bord :
+     égalité insensible à la casse et aux accents, pas recherche partielle. */
+  if (filters.city && fold(row.city) !== fold(filters.city)) return false;
+  if (filters.genre && fold(row.musicGenre) !== fold(filters.genre))
+    return false;
+
+  if (filters.ageMin !== undefined || filters.ageMax !== undefined) {
+    const bounds = birthDateBounds(
+      ageReferenceDate,
+      filters.ageMin ?? 0,
+      filters.ageMax ?? 120,
+    );
+    if (row.birthDate < bounds.min || row.birthDate > bounds.max) return false;
+  }
+
+  const submitted = Date.parse(row.submittedAt);
+  if (filters.from && submitted < doualaMidnight(filters.from)) return false;
+  if (filters.to && submitted >= doualaMidnight(filters.to, 1)) return false;
+
+  if (filters.q) {
+    const needle = fold(filters.q);
+    const digits = filters.q.replace(/\D/g, "");
+    const haystack = [
+      `${row.firstName} ${row.lastName}`,
+      row.stageName ?? "",
+      row.dossierNo,
+      row.email,
+      row.phone,
+    ]
+      .map(fold)
+      .join(" ");
+    const phoneDigits = row.phone.replace(/\D/g, "");
+    if (
+      !haystack.includes(needle) &&
+      !(digits.length >= 6 && phoneDigits.includes(digits))
+    )
+      return false;
+  }
+  return true;
+}
+
+/** Tri par colonne, sens inverse inclus. Le statut suit l'ordre du Pipeline, pas l'alphabet. */
+export function sortApplications<T extends FilterableApplication>(
+  rows: T[],
+  sort: (typeof SORTABLE_COLUMNS)[number],
+  dir: "asc" | "desc",
+): T[] {
+  const sign = dir === "desc" ? -1 : 1;
+  const value = (row: T): string | number => {
+    switch (sort) {
+      case "created_at":
+        return Date.parse(row.submittedAt);
+      case "status":
+        return CANDIDATE_STATUSES.indexOf(row.status);
+      case "last_name":
+        return row.lastName.toLowerCase();
+      case "dossier_no":
+        return row.dossierNo;
+      case "birth_date":
+        return row.birthDate;
+      case "city":
+        return row.city.toLowerCase();
+      case "music_genre":
+        return row.musicGenre.toLowerCase();
+    }
   };
+  return [...rows].sort((a, b) => {
+    const left = value(a);
+    const right = value(b);
+    if (typeof left === "number" && typeof right === "number")
+      return sign * (left - right);
+    return sign * String(left).localeCompare(String(right), "fr");
+  });
 }
 
 export function filtersToQuery(filters: Partial<CandidateFilters>): string {

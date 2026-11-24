@@ -4,37 +4,6 @@ import type { UploadKind } from "../domain/upload-rules";
 
 export class UploadError extends Error {}
 
-const PHOTO_MAX_EDGE = 1600;
-
-/** Réduit la photo côté téléphone (moins de données en 3G). Retourne l'original si la compression n'aide pas. */
-export async function compressPhoto(file: File): Promise<File> {
-  if (!file.type.startsWith("image/")) return file;
-  try {
-    const bitmap = await createImageBitmap(file);
-    const scale = Math.min(
-      1,
-      PHOTO_MAX_EDGE / Math.max(bitmap.width, bitmap.height),
-    );
-    const canvas = document.createElement("canvas");
-    canvas.width = Math.round(bitmap.width * scale);
-    canvas.height = Math.round(bitmap.height * scale);
-    canvas
-      .getContext("2d")
-      ?.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
-    bitmap.close();
-    const blob = await new Promise<Blob | null>((resolve) =>
-      canvas.toBlob(resolve, "image/webp", 0.82),
-    );
-    if (!blob || blob.type !== "image/webp" || blob.size >= file.size)
-      return file;
-    return new File([blob], file.name.replace(/\.\w+$/, ".webp"), {
-      type: "image/webp",
-    });
-  } catch {
-    return file;
-  }
-}
-
 export async function uploadRegistrationFile(
   kind: UploadKind,
   file: File,
@@ -48,6 +17,9 @@ export async function uploadRegistrationFile(
       kind,
       mime: file.type,
       size: file.size,
+      /* Le nom porte l'identifiant du candidat ; le backend l'ignore tant qu'il
+         ne le stocke pas, il ne coûte rien et il est déjà là quand il le lira. */
+      originalName: file.name,
       durationSeconds,
     }),
   });
@@ -62,14 +34,15 @@ export async function uploadRegistrationFile(
     );
   }
 
-  const form = new FormData();
-  form.append("cacheControl", "3600");
-  form.append("", file);
-
+  /* Corps brut : le backend range l'octet tel quel sous l'uploadId. Un envoi
+     multipart stockerait l'enveloppe MIME à la place du fichier. */
   await new Promise<void>((resolve, reject) => {
     const request = new XMLHttpRequest();
     request.open("PUT", payload.signedUrl as string);
-    request.setRequestHeader("x-upsert", "false");
+    request.setRequestHeader(
+      "Content-Type",
+      file.type || "application/octet-stream",
+    );
     request.upload.onprogress = (event) =>
       event.lengthComputable && onProgress(event.loaded / event.total);
     request.onload = () =>
@@ -84,7 +57,7 @@ export async function uploadRegistrationFile(
       reject(
         new UploadError("Connexion interrompue pendant l'envoi. Réessayez."),
       );
-    request.send(form);
+    request.send(file);
   });
 
   return payload.uploadId;

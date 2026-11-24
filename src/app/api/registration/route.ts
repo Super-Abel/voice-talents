@@ -1,7 +1,8 @@
 import { after } from "next/server";
 import { submitRegistration } from "@/features/registration/application/submit-registration";
+import { backendRegistrationPorts } from "@/features/registration/infrastructure/backend-registration-ports";
 import { sendRegistrationConfirmation } from "@/features/registration/infrastructure/registration-emails";
-import { supabaseRegistrationPorts } from "@/features/registration/infrastructure/supabase-registration-ports";
+import { BackendError } from "@/lib/server/backend";
 import { allowRequest } from "@/lib/server/rate-limit";
 import { clientIpFrom } from "@/lib/server/request";
 import { verifyTurnstile } from "@/lib/server/turnstile";
@@ -56,7 +57,17 @@ export async function POST(request: Request) {
     );
   }
 
-  const result = await submitRegistration(body, supabaseRegistrationPorts);
+  let result: Awaited<ReturnType<typeof submitRegistration>>;
+  try {
+    result = await submitRegistration(body, backendRegistrationPorts);
+  } catch (error) {
+    if (error instanceof BackendError)
+      return Response.json(
+        { error: error.message },
+        { status: error.status === 0 ? 503 : 502 },
+      );
+    throw error;
+  }
 
   switch (result.status) {
     case "window_closed":
@@ -64,7 +75,7 @@ export async function POST(request: Request) {
     case "invalid":
       return Response.json(
         {
-          error: "Certains champs sont à corriger.",
+          error: result.message,
           fieldErrors: result.fieldErrors,
         },
         { status: 422 },

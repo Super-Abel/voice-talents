@@ -8,7 +8,6 @@ import {
   PAGE_SIZE,
   parseCandidateFilters,
   type SORTABLE_COLUMNS,
-  toListParams,
 } from "@/features/admin-candidates/domain/candidate-filters";
 import { listCandidates } from "@/features/admin-candidates/infrastructure/candidates-admin-repository";
 import { StatusBadge } from "@/features/admin-candidates/ui/status-badge";
@@ -42,14 +41,12 @@ export default async function CandidatesPage({
   const filters = parseCandidateFilters(query);
   const settings = await getCachedSettings();
   const ageReference = toDoualaDate(settings.registration_closes_at);
-  const { rows, total } = await listCandidates(
-    toListParams(
-      filters,
-      ageReference,
-      PAGE_SIZE,
-      (filters.page - 1) * PAGE_SIZE,
-    ),
-  );
+  const { rows, total } = await listCandidates({
+    filters,
+    ageReferenceDate: ageReference,
+    limit: PAGE_SIZE,
+    offset: (filters.page - 1) * PAGE_SIZE,
+  });
   const pageCount = Math.max(1, Math.ceil(total / PAGE_SIZE));
   const currentPath = `/admin/inscrits${filtersToQuery(filters)}`;
   const exportHref = `/admin/inscrits/export${filtersToQuery({ ...filters, page: 1 })}`;
@@ -64,6 +61,7 @@ export default async function CandidatesPage({
     filters.to,
   ].some((value) => value !== undefined);
   const updated = typeof query.maj === "string" ? Number(query.maj) : null;
+  const failed = typeof query.echecs === "string" ? Number(query.echecs) : null;
   const sortHref = (column: CandidateFilters["sort"]) =>
     `/admin/inscrits${filtersToQuery({ ...filters, sort: column, dir: filters.sort === column && filters.dir === "desc" ? "asc" : "desc", page: 1 })}`;
 
@@ -89,12 +87,31 @@ export default async function CandidatesPage({
           {updated} dossier{updated > 1 ? "s" : ""} mis à jour.
         </output>
       )}
+      {failed !== null && Number.isFinite(failed) && failed > 0 && (
+        <p
+          role="alert"
+          className="rounded-md border border-danger/50 bg-danger/10 px-4 py-3 text-sm text-danger"
+        >
+          {failed} dossier
+          {failed > 1 ? "s" : ""} refusé
+          {failed > 1 ? "s" : ""} par le service d'inscription.
+        </p>
+      )}
       {query.erreur === "selection" && (
         <p
           role="alert"
           className="rounded-md border border-danger/50 bg-danger/10 px-4 py-3 text-sm text-danger"
         >
           Sélectionnez au moins un dossier et un statut.
+        </p>
+      )}
+      {query.erreur === "service" && (
+        <p
+          role="alert"
+          className="rounded-md border border-danger/50 bg-danger/10 px-4 py-3 text-sm text-danger"
+        >
+          Le service d'inscription est momentanément indisponible. Aucun statut
+          n'a été changé.
         </p>
       )}
 
@@ -284,7 +301,7 @@ export default async function CandidatesPage({
                       name="ids"
                       value={row.id}
                       form="bulk"
-                      aria-label={`Sélectionner ${row.dossier_no}`}
+                      aria-label={`Sélectionner ${row.dossierNo}`}
                       className="size-5 accent-[var(--flame-200)]"
                     />
                   </td>
@@ -293,27 +310,27 @@ export default async function CandidatesPage({
                       href={`/admin/inscrits/${row.id}`}
                       className="text-flame-100 hover:underline"
                     >
-                      {row.dossier_no}
+                      {row.dossierNo}
                     </Link>
                   </td>
                   <td className="px-3 py-2">
-                    {row.last_name} {row.first_name}
-                    {row.stage_name && (
+                    {row.lastName} {row.firstName}
+                    {row.stageName && (
                       <span className="block text-xs text-muted">
-                        « {row.stage_name} »
+                        « {row.stageName} »
                       </span>
                     )}
                   </td>
                   <td className="px-3 py-2 tabular-nums">
-                    {ageOn(row.birth_date, ageReference)} ans
+                    {ageOn(row.birthDate, ageReference)} ans
                   </td>
                   <td className="px-3 py-2">{row.city}</td>
-                  <td className="px-3 py-2">{row.music_genre}</td>
+                  <td className="px-3 py-2">{row.musicGenre}</td>
                   <td className="px-3 py-2">
                     <StatusBadge status={row.status} />
                   </td>
                   <td className="px-3 py-2 whitespace-nowrap text-muted">
-                    {formatShortDateTime(row.created_at)}
+                    {formatShortDateTime(row.submittedAt)}
                   </td>
                   <td className="px-3 py-2 whitespace-nowrap">
                     {formatCameroonMobile(row.phone)}

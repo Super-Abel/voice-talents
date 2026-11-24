@@ -1,18 +1,17 @@
 import { authorizeAdmin } from "@/features/admin-auth/access";
 import {
+  matchesFilters,
   parseCandidateFilters,
-  toListParams,
+  sortApplications,
 } from "@/features/admin-candidates/domain/candidate-filters";
 import { csvLine, UTF8_BOM } from "@/features/admin-candidates/domain/csv";
-import { listCandidates } from "@/features/admin-candidates/infrastructure/candidates-admin-repository";
+import { fetchAllApplications } from "@/features/admin-candidates/infrastructure/candidates-admin-repository";
 import { CANDIDATE_STATUS_LABELS } from "@/features/registration/domain/candidate-status";
 import { ageOn } from "@/features/registration/domain/eligibility";
 import { getFreshSettings } from "@/features/settings/infrastructure/settings-repository";
 import { writeAudit } from "@/lib/server/audit";
 import { clientIpFrom } from "@/lib/server/request";
 import { formatShortDateTime, toDoualaDate } from "@/lib/time";
-
-const BATCH = 1000;
 
 const HEADERS = [
   "Dossier",
@@ -32,6 +31,7 @@ const HEADERS = [
   "Inscrit le",
 ];
 
+/** Le CSV du backend est séparé par des virgules et en anglais : Excel français relitait tout sur une colonne. */
 export async function GET(request: Request) {
   const session = await authorizeAdmin();
   if (!session) return new Response("Accès refusé", { status: 401 });
@@ -41,41 +41,39 @@ export async function GET(request: Request) {
   const ageReference = toDoualaDate(
     (await getFreshSettings()).registration_closes_at,
   );
+  const rows = await fetchAllApplications();
+  const matched = sortApplications(
+    rows.filter((row) => matchesFilters(row, filters, ageReference)),
+    filters.sort,
+    filters.dir,
+  );
 
   let csv = UTF8_BOM + csvLine(HEADERS);
-  let exported = 0;
-  for (let offset = 0; ; offset += BATCH) {
-    const { rows } = await listCandidates(
-      toListParams(filters, ageReference, BATCH, offset),
-    );
-    for (const row of rows) {
-      csv += csvLine([
-        row.dossier_no,
-        row.last_name,
-        row.first_name,
-        row.stage_name,
-        row.birth_date,
-        ageOn(row.birth_date, ageReference),
-        row.gender === "female" ? "F" : "M",
-        row.phone,
-        row.email,
-        row.city,
-        row.district,
-        row.music_genre,
-        row.song_title,
-        CANDIDATE_STATUS_LABELS[row.status],
-        formatShortDateTime(row.created_at),
-      ]);
-    }
-    exported += rows.length;
-    if (rows.length < BATCH) break;
+  for (const row of matched) {
+    csv += csvLine([
+      row.dossierNo,
+      row.lastName,
+      row.firstName,
+      row.stageName,
+      row.birthDate,
+      ageOn(row.birthDate, ageReference),
+      row.gender === "female" ? "F" : "M",
+      row.phone,
+      row.email,
+      row.city,
+      row.district,
+      row.musicGenre,
+      row.songTitle,
+      CANDIDATE_STATUS_LABELS[row.status],
+      formatShortDateTime(row.submittedAt),
+    ]);
   }
 
   await writeAudit({
     actor: session.user,
     action: "candidates.exported",
     entity: "candidate",
-    after: { count: exported, filters },
+    after: { count: matched.length, filters },
     ip: clientIpFrom(request.headers),
   });
 

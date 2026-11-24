@@ -6,8 +6,13 @@ import {
   ADMIN_ROLE_LABELS,
   type AdminRole,
 } from "@/features/admin-auth/domain/roles";
+import { JURY_ROLES } from "@/features/admin-jury/domain/review";
 
-const NAV_ITEMS: { href: string; label: string; roles: AdminRole[] }[] = [
+const NAV_ITEMS: {
+  href: string;
+  label: string;
+  roles: readonly AdminRole[];
+}[] = [
   { href: "/admin", label: "Tableau de bord", roles: ["super_admin", "admin"] },
   {
     href: "/admin/inscrits",
@@ -21,7 +26,7 @@ const NAV_ITEMS: { href: string; label: string; roles: AdminRole[] }[] = [
     label: "Utilisateurs",
     roles: ["super_admin"],
   },
-  { href: "/admin/jury", label: "Notes du jury", roles: ["jury"] },
+  { href: "/admin/jury", label: "Notes du jury", roles: JURY_ROLES },
   {
     href: "/admin/controle",
     label: "Contrôle d'entrée",

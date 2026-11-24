@@ -1,4 +1,3 @@
-import { randomUUID } from "node:crypto";
 import { z } from "zod";
 import {
   REGISTRATION_CLOSED_MESSAGES,
@@ -10,19 +9,17 @@ import {
   validateUploadDuration,
 } from "@/features/registration/domain/upload-rules";
 import { getFreshSettings } from "@/features/settings/infrastructure/settings-repository";
-import { CANDIDATE_FILES_BUCKET, db } from "@/lib/server/db";
+import { BackendError, prepareUpload } from "@/lib/server/backend";
 import { allowRequest } from "@/lib/server/rate-limit";
-import { clientIpFrom, fingerprint } from "@/lib/server/request";
-import { toDoualaDate } from "@/lib/time";
+import { clientIpFrom } from "@/lib/server/request";
 
 const requestSchema = z.object({
   kind: z.enum(["photo", "presentation"]),
   mime: z.string().max(100),
   size: z.number().int().positive(),
   durationSeconds: z.number().int().positive().max(600).optional(),
+  originalName: z.string().trim().max(180).optional(),
 });
-
-const UPLOAD_VALIDITY_MS = 24 * 60 * 60 * 1000;
 
 export async function POST(request: Request) {
   const ip = clientIpFrom(request.headers);
@@ -51,7 +48,7 @@ export async function POST(request: Request) {
   );
   if (!parsed.success)
     return Response.json({ error: "Requête invalide." }, { status: 400 });
-  const { kind, mime, size, durationSeconds } = parsed.data;
+  const { kind, mime, size, durationSeconds, originalName } = parsed.data;
   /* La durée est déclarée par l'appareil : non vérifiable ici, elle ferme juste
      la porte à un usage direct de l'API. Le contrôle qui compte reste celui du
      fichier, côté navigateur avant l'envoi puis à la soumission. */
@@ -62,31 +59,24 @@ export async function POST(request: Request) {
       : null);
   if (problem) return Response.json({ error: problem }, { status: 422 });
 
-  const extension = UPLOAD_RULES[kind].types[mime];
-  const path = `pending/${toDoualaDate(now)}/${randomUUID()}.${extension}`;
-
-  const { data: upload, error: insertError } = await db()
-    .from("uploads")
-    .insert({
-      path,
+  try {
+    const { uploadId, signedUrl } = await prepareUpload({
       kind,
       mime,
-      max_bytes: UPLOAD_RULES[kind].maxBytes,
-      duration_seconds: durationSeconds ?? null,
-      ip_hash: ip ? fingerprint(ip) : null,
-      expires_at: new Date(now.getTime() + UPLOAD_VALIDITY_MS).toISOString(),
-    })
-    .select("id")
-    .single();
-  if (insertError) throw insertError;
-
-  const { data: signed, error: signError } = await db()
-    .storage.from(CANDIDATE_FILES_BUCKET)
-    .createSignedUploadUrl(path);
-  if (signError) throw signError;
-
-  return Response.json(
-    { uploadId: upload.id, signedUrl: signed.signedUrl },
-    { headers: { "Cache-Control": "no-store" } },
-  );
+      size,
+      durationSeconds,
+      originalName,
+    });
+    return Response.json(
+      { uploadId, signedUrl },
+      { headers: { "Cache-Control": "no-store" } },
+    );
+  } catch (error) {
+    if (error instanceof BackendError && error.isClientError)
+      return Response.json({ error: error.message }, { status: 422 });
+    return Response.json(
+      { error: "Le service d'envoi est indisponible. Réessayez." },
+      { status: 503 },
+    );
+  }
 }

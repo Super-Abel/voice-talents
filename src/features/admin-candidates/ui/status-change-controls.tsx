@@ -34,6 +34,23 @@ export function StatusChangeControls({
           ))}
         </select>
       </div>
+      <div className="min-w-56 flex-1">
+        <label
+          htmlFor={`${formId ?? "single"}-comment`}
+          className="field-label"
+        >
+          Commentaire (facultatif)
+        </label>
+        <input
+          id={`${formId ?? "single"}-comment`}
+          type="text"
+          name="comment"
+          form={formId}
+          maxLength={500}
+          placeholder="Motif visible dans l'historique du dossier"
+          className="field-input w-full"
+        />
+      </div>
       <label className="flex min-h-12 items-center gap-2 text-sm">
         <input
           type="checkbox"

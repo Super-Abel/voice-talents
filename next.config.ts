@@ -1,14 +1,17 @@
 import type { NextConfig } from "next";
 
-const supabaseUrl = process.env.SUPABASE_URL ?? "";
+const backendApiUrl = process.env.BACKEND_API_URL ?? "";
+const backendOrigin = backendApiUrl
+  ? new URL(backendApiUrl).origin
+  : "https://vt-api.mana-matrix.com";
 
 const contentSecurityPolicy = [
   "default-src 'self'",
   "script-src 'self' 'unsafe-inline' https://challenges.cloudflare.com",
   "style-src 'self' 'unsafe-inline'",
-  `img-src 'self' data: blob: ${supabaseUrl}`,
-  `media-src 'self' blob: ${supabaseUrl}`,
-  `connect-src 'self' ${supabaseUrl}`,
+  `img-src 'self' data: blob: ${backendOrigin}`,
+  `media-src 'self' blob: ${backendOrigin}`,
+  `connect-src 'self' ${backendOrigin}`,
   "frame-src https://challenges.cloudflare.com",
   "font-src 'self'",
   "object-src 'none'",

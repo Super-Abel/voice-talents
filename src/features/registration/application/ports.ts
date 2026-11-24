@@ -1,18 +1,4 @@
 import type { Registration } from "../domain/registration-schema";
-import type { UploadKind } from "../domain/upload-rules";
-
-export type PendingUpload = {
-  id: string;
-  path: string;
-  kind: UploadKind;
-  mime: string;
-  maxBytes: number;
-  durationSeconds: number | null;
-  usedAt: string | null;
-  expiresAt: string;
-};
-
-export type StoredObject = { size: number; mime: string };
 
 export type RegistrationPolicy = {
   opensAt: Date;
@@ -21,21 +7,16 @@ export type RegistrationPolicy = {
   ageMax: number;
 };
 
-export type NewCandidate = Registration & {
-  photoPath: string;
-  presentationPath: string;
-  consentAt: Date;
-};
-
-export type CreateCandidateResult =
-  | { ok: true; id: string; dossierNo: string }
-  | { ok: false; duplicate: "phone" | "email" };
+/**
+ * Le backend garde la main sur les fichiers, l'unicité et l'enregistrement :
+ * il rend soit un numéro de dossier, soit le motif à afficher au candidat.
+ */
+export type SubmitOutcome =
+  | { ok: true; dossierNo: string }
+  | { ok: false; message: string; fieldErrors: Record<string, string> };
 
 export interface RegistrationPorts {
   now(): Date;
   loadPolicy(): Promise<RegistrationPolicy>;
-  findUploads(ids: string[]): Promise<PendingUpload[]>;
-  statObject(path: string): Promise<StoredObject | null>;
-  createCandidate(candidate: NewCandidate): Promise<CreateCandidateResult>;
-  markUploadsUsed(ids: string[], candidateId: string): Promise<void>;
+  submit(registration: Registration): Promise<SubmitOutcome>;
 }

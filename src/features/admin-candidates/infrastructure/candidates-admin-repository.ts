@@ -1,134 +1,140 @@
 import "server-only";
+import type { CandidateFilters } from "@/features/admin-candidates/domain/candidate-filters";
+import {
+  matchesFilters,
+  sortApplications,
+} from "@/features/admin-candidates/domain/candidate-filters";
 import type { CandidateStatus } from "@/features/registration/domain/candidate-status";
-import { CANDIDATE_FILES_BUCKET, db } from "@/lib/server/db";
+import { writeAudit } from "@/lib/server/audit";
+import {
+  type BackendApplicationDetail,
+  type BackendApplicationSummary,
+  BackendError,
+  getApplication,
+  listApplications,
+  updateApplicationStatus,
+} from "@/lib/server/backend";
+import { toDoualaDate } from "@/lib/time";
 
-export type CandidateListRow = {
-  id: string;
-  dossier_no: string;
-  last_name: string;
-  first_name: string;
-  stage_name: string | null;
-  birth_date: string;
-  gender: "female" | "male";
-  phone: string;
-  email: string;
-  city: string;
-  district: string;
-  music_genre: string;
-  song_title: string;
-  status: CandidateStatus;
-  created_at: string;
-  total_count: number;
-};
+export type CandidateListRow = BackendApplicationSummary;
+export type CandidateDetail = BackendApplicationDetail;
 
-export async function listCandidates(
-  params: Record<string, unknown>,
-): Promise<{ rows: CandidateListRow[]; total: number }> {
-  const { data, error } = await db().rpc("admin_list_candidates", params);
-  if (error) throw error;
-  const rows = (data ?? []) as CandidateListRow[];
-  return { rows, total: rows.length > 0 ? Number(rows[0].total_count) : 0 };
+/**
+ * Le backend ne filtre que par statut, sexe et texte libre. Ville, genre, âges,
+ * période, tri et pagination sont donc appliqués ici, sur la liste complète.
+ */
+export function fetchAllApplications(): Promise<CandidateListRow[]> {
+  return listApplications({});
 }
 
-export type CandidateDetail = {
-  id: string;
-  dossier_no: string;
-  last_name: string;
-  first_name: string;
-  stage_name: string | null;
-  birth_date: string;
-  gender: "female" | "male";
-  phone: string;
-  email: string;
-  city: string;
-  district: string;
-  contact_name: string | null;
-  contact_phone: string | null;
-  id_number: string | null;
-  id_scan_path: string | null;
-  photo_path: string;
-  music_genre: string;
-  song_title: string;
-  music_background: string;
-  social_links: Record<string, string | undefined>;
-  presentation_path: string | null;
-  presentation_url: string | null;
-  consent_at: string;
-  status: CandidateStatus;
-  status_changed_at: string | null;
-  created_at: string;
-};
+export async function listCandidates({
+  filters,
+  ageReferenceDate,
+  limit,
+  offset,
+}: {
+  filters: CandidateFilters;
+  ageReferenceDate: string;
+  limit: number;
+  offset: number;
+}): Promise<{ rows: CandidateListRow[]; total: number }> {
+  const rows = await fetchAllApplications();
+  const matched = rows.filter((row) =>
+    matchesFilters(row, filters, ageReferenceDate),
+  );
+  return {
+    rows: sortApplications(matched, filters.sort, filters.dir).slice(
+      offset,
+      offset + limit,
+    ),
+    total: matched.length,
+  };
+}
 
+/** Un dossier inconnu du backend n'est pas une panne : la fiche répond 404. */
 export async function getCandidate(
   id: string,
 ): Promise<CandidateDetail | null> {
-  const { data, error } = await db()
-    .from("candidates")
-    .select("*")
-    .eq("id", id)
-    .maybeSingle();
-  if (error) throw error;
-  return data as CandidateDetail | null;
-}
-
-const SIGNED_URL_TTL_SECONDS = 10 * 60;
-
-/** URL de lecture privées et de courte durée, pour l'admin uniquement. */
-export async function signedFileUrls(
-  paths: (string | null)[],
-): Promise<Record<string, string>> {
-  const existing = paths.filter((path): path is string => Boolean(path));
-  if (existing.length === 0) return {};
-  const { data, error } = await db()
-    .storage.from(CANDIDATE_FILES_BUCKET)
-    .createSignedUrls(existing, SIGNED_URL_TTL_SECONDS);
-  if (error) throw error;
-  const urls: Record<string, string> = {};
-  for (const entry of data) {
-    if (entry.path && entry.signedUrl) urls[entry.path] = entry.signedUrl;
+  try {
+    return await getApplication(id);
+  } catch (error) {
+    if (error instanceof BackendError && error.status === 404) return null;
+    throw error;
   }
-  return urls;
-}
-
-/** Durée déclarée à l'envoi de la vidéo de prestation ; null pour les dossiers plus anciens. */
-export async function presentationDuration(
-  candidateId: string,
-): Promise<number | null> {
-  const { data, error } = await db()
-    .from("uploads")
-    .select("duration_seconds")
-    .eq("candidate_id", candidateId)
-    .eq("kind", "presentation")
-    .not("duration_seconds", "is", null)
-    .order("issued_at", { ascending: false })
-    .limit(1)
-    .maybeSingle();
-  if (error) throw error;
-  return data ? Number(data.duration_seconds) : null;
 }
 
 export type StatusChange = {
   id: string;
-  dossier_no: string;
+  dossierNo: string;
   email: string;
-  first_name: string;
-  previous_status: CandidateStatus;
+  firstName: string;
+  previousStatus: CandidateStatus;
 };
 
+export type StatusChangeResult = {
+  changes: StatusChange[];
+  /** Un dossier refusé par le backend ne doit pas annuler les autres. */
+  failures: { id: string; reason: string }[];
+};
+
+/**
+ * Le PATCH du backend est unitaire : la multi-sélection devient une boucle.
+ * Les dossiers déjà au statut demandé sont ignorés, ils ne méritent pas une
+ * ligne d'historique vide.
+ */
 export async function setCandidatesStatus(
   ids: string[],
   status: CandidateStatus,
-  actorId: string,
+  actor: { id: string; email: string },
   ip: string | null,
-): Promise<StatusChange[]> {
-  const { data, error } = await db().rpc("admin_set_candidates_status", {
-    p_ids: ids,
-    p_status: status,
-    p_actor: actorId,
-    p_ip: ip,
-  });
-  if (error) throw error;
-  return (data ?? []) as StatusChange[];
+  comment?: string,
+): Promise<StatusChangeResult> {
+  const rowsById = new Map(
+    (await fetchAllApplications()).map((row) => [row.id, row]),
+  );
+  const changes: StatusChange[] = [];
+  const failures: { id: string; reason: string }[] = [];
+  for (const id of ids) {
+    const before = rowsById.get(id);
+    if (!before) {
+      failures.push({ id, reason: "Dossier introuvable." });
+      continue;
+    }
+    if (before.status === status) continue;
+    try {
+      await updateApplicationStatus(id, {
+        status,
+        comment: comment ? `${actor.email} — ${comment}` : undefined,
+      });
+    } catch (error) {
+      failures.push({
+        id,
+        reason:
+          error instanceof BackendError
+            ? error.message
+            : "Le service est momentanément indisponible.",
+      });
+      continue;
+    }
+    changes.push({
+      id,
+      dossierNo: before.dossierNo,
+      email: before.email,
+      firstName: before.firstName,
+      previousStatus: before.status,
+    });
+    /* Le backend ne connaît que voice_admin : ce journal garde l'identité réelle. */
+    await writeAudit({
+      actor,
+      action: "candidate.status_changed",
+      entity: "candidate",
+      entityId: id,
+      before: { status: before.status },
+      after: { status, comment: comment || null },
+      ip,
+    });
+  }
+  return { changes, failures };
 }
 
 export type RegistrationStats = {
@@ -139,34 +145,48 @@ export type RegistrationStats = {
   by_genre: { label: string; count: number }[];
 };
 
-export async function registrationStats(): Promise<RegistrationStats> {
-  const { data, error } = await db().rpc("admin_registration_stats");
-  if (error) throw error;
-  return data as RegistrationStats;
+/** Première lettre de chaque mot en majuscule, le reste en minuscules, comme initcap. */
+function initcap(value: string): string {
+  return value
+    .toLowerCase()
+    .replace(
+      /(^|[^\p{L}])(\p{L})/gu,
+      (_all, sep: string, letter: string) => `${sep}${letter.toUpperCase()}`,
+    );
 }
 
-export type AuditEntryRow = {
-  id: number;
-  at: string;
-  actor_email: string | null;
-  action: string;
-  entity: string;
-  entity_id: string | null;
-  before: unknown;
-  after: unknown;
-  ip: string | null;
-};
+function topLabels(counts: Map<string, number>): {
+  label: string;
+  count: number;
+}[] {
+  return [...counts.entries()]
+    .map(([key, count]) => ({ label: initcap(key), count }))
+    .sort((a, b) => b.count - a.count || a.label.localeCompare(b.label, "fr"))
+    .slice(0, 10);
+}
 
-export async function candidateHistory(
-  candidateId: string,
-): Promise<AuditEntryRow[]> {
-  const { data, error } = await db()
-    .from("audit_log")
-    .select("id, at, actor_email, action, entity, entity_id, before, after, ip")
-    .eq("entity", "candidate")
-    .eq("entity_id", candidateId)
-    .order("at", { ascending: false })
-    .limit(50);
-  if (error) throw error;
-  return data as AuditEntryRow[];
+/** Aucun endpoint de statistiques : les compteurs se déduisent de la liste complète. */
+export async function registrationStats(): Promise<RegistrationStats> {
+  const rows = await fetchAllApplications();
+  const by_status: Partial<Record<CandidateStatus, number>> = {};
+  const days = new Map<string, number>();
+  const cities = new Map<string, number>();
+  const genres = new Map<string, number>();
+  const bump = (map: Map<string, number>, key: string) =>
+    map.set(key, (map.get(key) ?? 0) + 1);
+  for (const row of rows) {
+    by_status[row.status] = (by_status[row.status] ?? 0) + 1;
+    bump(days, toDoualaDate(row.submittedAt));
+    bump(cities, row.city.trim().toLowerCase());
+    bump(genres, row.musicGenre.trim().toLowerCase());
+  }
+  return {
+    total: rows.length,
+    by_status,
+    by_day: [...days.entries()]
+      .map(([day, count]) => ({ day, count }))
+      .sort((a, b) => a.day.localeCompare(b.day)),
+    by_city: topLabels(cities),
+    by_genre: topLabels(genres),
+  };
 }

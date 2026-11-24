@@ -9,31 +9,24 @@ import {
   REGISTRATION_CLOSED_MESSAGES,
   registrationPhase,
 } from "../domain/registration-window";
-import {
-  UPLOAD_RULES,
-  type UploadKind,
-  validateUploadDuration,
-} from "../domain/upload-rules";
-import type { PendingUpload, RegistrationPorts } from "./ports";
+import type { RegistrationPorts } from "./ports";
 
 export type SubmitRegistrationResult =
-  | {
-      status: "created";
-      dossierNo: string;
-      candidateId: string;
-      email: string;
-      firstName: string;
-    }
+  | { status: "created"; dossierNo: string; email: string; firstName: string }
   | { status: "window_closed"; message: string }
-  | { status: "invalid"; fieldErrors: FieldErrors };
+  | { status: "invalid"; message: string; fieldErrors: FieldErrors };
 
+/**
+ * Porte d'entrée du dépôt de dossier. Les règles liées au calendrier de
+ * l'édition (ouverture, clôture, âges) vivent ici, dans le site ; le backend
+ * est authoritaire sur les fichiers, les doublons et le numéro de dossier.
+ */
 export async function submitRegistration(
   rawInput: unknown,
   ports: RegistrationPorts,
 ): Promise<SubmitRegistrationResult> {
   const policy = await ports.loadPolicy();
-  const now = ports.now();
-  const phase = registrationPhase(now, policy.opensAt, policy.closesAt);
+  const phase = registrationPhase(ports.now(), policy.opensAt, policy.closesAt);
   if (phase !== "open")
     return {
       status: "window_closed",
@@ -42,7 +35,11 @@ export async function submitRegistration(
 
   const parsed = registrationSchema.safeParse(rawInput);
   if (!parsed.success)
-    return { status: "invalid", fieldErrors: toFieldErrors(parsed.error) };
+    return {
+      status: "invalid",
+      message: "Certains champs sont à corriger.",
+      fieldErrors: toFieldErrors(parsed.error),
+    };
   const input = parsed.data;
 
   const referenceDate = toDoualaDate(policy.closesAt);
@@ -51,83 +48,25 @@ export async function submitRegistration(
   ) {
     return {
       status: "invalid",
+      message: "Certains champs sont à corriger.",
       fieldErrors: {
         birthDate: `Le concours est ouvert aux personnes de ${policy.ageMin} à ${policy.ageMax} ans révolus au ${new Intl.DateTimeFormat("fr-FR", { dateStyle: "long", timeZone: "Africa/Douala" }).format(policy.closesAt)}.`,
       },
     };
   }
 
-  const requested: { field: string; id: string; kind: UploadKind }[] = [
-    { field: "photoUploadId", id: input.photoUploadId, kind: "photo" },
-    {
-      field: "presentationUploadId",
-      id: input.presentationUploadId,
-      kind: "presentation",
-    },
-  ];
-
-  const uploads = await ports.findUploads(requested.map((item) => item.id));
-  const paths: Partial<Record<UploadKind, string>> = {};
-  const uploadErrors: FieldErrors = {};
-
-  for (const item of requested) {
-    const upload = uploads.find((candidate) => candidate.id === item.id);
-    const problem = await checkUpload(upload, item.kind, now, ports);
-    if (problem) uploadErrors[item.field] = problem;
-    else if (upload) paths[item.kind] = upload.path;
-  }
-  if (Object.keys(uploadErrors).length > 0)
-    return { status: "invalid", fieldErrors: uploadErrors };
-
-  const created = await ports.createCandidate({
-    ...input,
-    photoPath: paths.photo as string,
-    presentationPath: paths.presentation as string,
-    consentAt: now,
-  });
-  if (!created.ok) {
+  const outcome = await ports.submit(input);
+  if (!outcome.ok)
     return {
       status: "invalid",
-      fieldErrors:
-        created.duplicate === "phone"
-          ? { phone: "Un dossier existe déjà avec ce numéro de téléphone." }
-          : { email: "Un dossier existe déjà avec cette adresse e-mail." },
+      message: outcome.message,
+      fieldErrors: outcome.fieldErrors,
     };
-  }
 
-  await ports.markUploadsUsed(
-    requested.map((item) => item.id),
-    created.id,
-  );
   return {
     status: "created",
-    dossierNo: created.dossierNo,
-    candidateId: created.id,
+    dossierNo: outcome.dossierNo,
     email: input.email,
     firstName: input.firstName,
   };
-}
-
-async function checkUpload(
-  upload: PendingUpload | undefined,
-  kind: UploadKind,
-  now: Date,
-  ports: RegistrationPorts,
-): Promise<string | null> {
-  const retry = "Fichier introuvable ou expiré, merci de le renvoyer.";
-  if (
-    !upload ||
-    upload.kind !== kind ||
-    upload.usedAt ||
-    new Date(upload.expiresAt) < now
-  )
-    return retry;
-  const stored = await ports.statObject(upload.path);
-  if (!stored) return retry;
-  const rule = UPLOAD_RULES[kind];
-  if (stored.size > rule.maxBytes || !(stored.mime in rule.types))
-    return "Fichier non conforme, merci de le renvoyer.";
-  // Durée déclarée à l'upload, contrôlée à nouveau ici : elle n'a pas voyagé
-  // avec le fichier lui-même, mais elle reste la seule trace exploitable.
-  return validateUploadDuration(kind, upload.durationSeconds);
 }

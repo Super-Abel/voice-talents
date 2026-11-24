@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import type { PendingUpload, RegistrationPorts } from "./ports";
+import type { RegistrationPorts } from "./ports";
 import { submitRegistration } from "./submit-registration";
 
 const PHOTO_ID = "8b6f1d1e-3c55-4c7c-9e43-0b3a2f1c9d10";
@@ -28,28 +28,6 @@ function makePorts(
   now: string,
   overrides: Partial<RegistrationPorts> = {},
 ): RegistrationPorts {
-  const uploads: PendingUpload[] = [
-    {
-      id: PHOTO_ID,
-      path: "pending/2026-11-21/photo.jpg",
-      kind: "photo",
-      mime: "image/jpeg",
-      maxBytes: 5 * 1024 * 1024,
-      durationSeconds: null,
-      usedAt: null,
-      expiresAt: "2026-12-31T00:00:00Z",
-    },
-    {
-      id: PRESENTATION_ID,
-      path: "pending/2026-11-21/prestation.mp4",
-      kind: "presentation",
-      mime: "video/mp4",
-      maxBytes: 40 * 1024 * 1024,
-      durationSeconds: 28,
-      usedAt: null,
-      expiresAt: "2026-12-31T00:00:00Z",
-    },
-  ];
   return {
     now: () => new Date(now),
     loadPolicy: async () => ({
@@ -58,64 +36,62 @@ function makePorts(
       ageMin: 18,
       ageMax: 35,
     }),
-    findUploads: async () => uploads,
-    // La taille réelle en stock est contrôlée par type de fichier.
-    statObject: async (path) =>
-      path.endsWith(".mp4")
-        ? { size: 8_000_000, mime: "video/mp4" }
-        : { size: 200_000, mime: "image/jpeg" },
-    createCandidate: vi.fn(async () => ({
+    submit: vi.fn(async () => ({
       ok: true as const,
-      id: "c1",
       dossierNo: "VT-2026-0001",
     })),
-    markUploadsUsed: vi.fn(async () => {}),
     ...overrides,
   };
 }
 
 describe("submitRegistration", () => {
-  it("refuse le 20/11/2026 à 23:59:59 (Douala) sans rien enregistrer", async () => {
+  it("refuse le 20/11/2026 à 23:59:59 (Douala) sans rien envoyer au backend", async () => {
     const ports = makePorts("2026-11-20T23:59:59+01:00");
     const result = await submitRegistration(validInput, ports);
     expect(result.status).toBe("window_closed");
-    expect(ports.createCandidate).not.toHaveBeenCalled();
+    expect(ports.submit).not.toHaveBeenCalled();
   });
 
   it("refuse le 28/11/2026 à 00:00:00 (Douala)", async () => {
-    const result = await submitRegistration(
-      validInput,
-      makePorts("2026-11-28T00:00:00+01:00"),
-    );
+    const ports = makePorts("2026-11-28T00:00:00+01:00");
+    const result = await submitRegistration(validInput, ports);
     expect(result).toEqual({
       status: "window_closed",
       message: "Les inscriptions sont closes.",
     });
+    expect(ports.submit).not.toHaveBeenCalled();
   });
 
-  it("accepte pendant la période et renvoie le n° de dossier", async () => {
+  it("accepte pendant la période et renvoie le n° de dossier du backend", async () => {
     const ports = makePorts("2026-11-24T12:00:00+01:00");
     const result = await submitRegistration(validInput, ports);
-    expect(result).toMatchObject({
+    expect(result).toEqual({
       status: "created",
       dossierNo: "VT-2026-0001",
       email: "aicha@example.cm",
+      firstName: "Aïcha",
     });
-    expect(ports.markUploadsUsed).toHaveBeenCalledWith(
-      [PHOTO_ID, PRESENTATION_ID],
-      "c1",
-    );
+  });
+
+  it("transmet le téléphone normalisé au format international", async () => {
+    const ports = makePorts("2026-11-24T12:00:00+01:00");
+    await submitRegistration(validInput, ports);
+    const [registration] = vi.mocked(ports.submit).mock.calls[0];
+    expect(registration.phone).toBe("+237671234567");
+    expect(registration.contactPhone).toBe("+237690112233");
   });
 
   it("refuse 17 ans et 364 jours à la clôture", async () => {
+    const ports = makePorts("2026-11-24T12:00:00+01:00");
     const result = await submitRegistration(
       { ...validInput, birthDate: "2008-11-28" },
-      makePorts("2026-11-24T12:00:00+01:00"),
+      ports,
     );
     expect(result.status).toBe("invalid");
     expect(
       result.status === "invalid" && result.fieldErrors.birthDate,
     ).toBeTruthy();
+    expect(ports.submit).not.toHaveBeenCalled();
   });
 
   it("refuse 36 ans à la clôture", async () => {
@@ -126,129 +102,64 @@ describe("submitRegistration", () => {
     expect(result.status).toBe("invalid");
   });
 
-  it("traduit un doublon de téléphone en message clair", async () => {
-    const ports = makePorts("2026-11-24T12:00:00+01:00", {
-      createCandidate: async () => ({ ok: false, duplicate: "phone" }),
-    });
-    const result = await submitRegistration(validInput, ports);
+  it("arrête une saisie incomplète avant tout appel réseau", async () => {
+    const ports = makePorts("2026-11-24T12:00:00+01:00");
+    const withoutGender = { ...validInput };
+    delete (withoutGender as Record<string, unknown>).gender;
+    const result = await submitRegistration(withoutGender, ports);
+    expect(result.status).toBe("invalid");
+    expect(
+      result.status === "invalid" && result.fieldErrors.gender,
+    ).toBeTruthy();
+    expect(ports.submit).not.toHaveBeenCalled();
+  });
+
+  it("traduit un lien social refusé par le backend en erreur de champ", async () => {
+    const refusal = {
+      ok: false as const,
+      message: "Veuillez corriger les champs signalés.",
+      fieldErrors: {
+        "socialLinks.instagram": "Lien invalide (doit commencer par https://)",
+      },
+    };
+    const result = await submitRegistration(
+      validInput,
+      makePorts("2026-11-24T12:00:00+01:00", { submit: async () => refusal }),
+    );
     expect(result).toEqual({
       status: "invalid",
-      fieldErrors: {
-        phone: "Un dossier existe déjà avec ce numéro de téléphone.",
-      },
+      message: refusal.message,
+      fieldErrors: refusal.fieldErrors,
     });
   });
 
-  it("refuse une photo déjà utilisée par un autre dossier", async () => {
+  it("conserve le message de doublon renvoyé par le backend", async () => {
     const ports = makePorts("2026-11-24T12:00:00+01:00", {
-      findUploads: async (ids) => [
-        {
-          id: PHOTO_ID,
-          path: "x",
-          kind: "photo",
-          mime: "image/jpeg",
-          maxBytes: 1,
-          durationSeconds: null,
-          usedAt: "2026-11-22T00:00:00Z",
-          expiresAt: "2026-12-31T00:00:00Z",
+      submit: async () => ({
+        ok: false as const,
+        message: "Un seul dossier est admis par personne.",
+        fieldErrors: {
+          phone: "Un dossier existe déjà avec ce numéro de téléphone.",
+          email: "Un dossier existe déjà avec cette adresse e-mail.",
         },
-        ...(ids.includes(PRESENTATION_ID)
-          ? [
-              {
-                id: PRESENTATION_ID,
-                path: "pending/2026-11-21/prestation.mp4",
-                kind: "presentation" as const,
-                mime: "video/mp4",
-                maxBytes: 40 * 1024 * 1024,
-                durationSeconds: 28,
-                usedAt: null,
-                expiresAt: "2026-12-31T00:00:00Z",
-              },
-            ]
-          : []),
-      ],
-    });
-    const result = await submitRegistration(validInput, ports);
-    expect(
-      result.status === "invalid" && result.fieldErrors.photoUploadId,
-    ).toBeTruthy();
-    expect(ports.createCandidate).not.toHaveBeenCalled();
-  });
-
-  it("refuse une prestation absente des fichiers en attente", async () => {
-    const ports = makePorts("2026-11-24T12:00:00+01:00", {
-      findUploads: async () => [
-        {
-          id: PHOTO_ID,
-          path: "pending/2026-11-21/photo.jpg",
-          kind: "photo",
-          mime: "image/jpeg",
-          maxBytes: 5 * 1024 * 1024,
-          durationSeconds: null,
-          usedAt: null,
-          expiresAt: "2026-12-31T00:00:00Z",
-        },
-      ],
-    });
-    const result = await submitRegistration(validInput, ports);
-    expect(
-      result.status === "invalid" && result.fieldErrors.presentationUploadId,
-    ).toBeTruthy();
-    expect(ports.createCandidate).not.toHaveBeenCalled();
-  });
-
-  it("refuse un fichier stocké plus gros que la limite", async () => {
-    const ports = makePorts("2026-11-24T12:00:00+01:00", {
-      statObject: async () => ({ size: 6 * 1024 * 1024, mime: "image/jpeg" }),
+      }),
     });
     const result = await submitRegistration(validInput, ports);
     expect(result.status).toBe("invalid");
-  });
-
-  it("refuse une prestation stockée au-delà de 40 Mo", async () => {
-    const ports = makePorts("2026-11-24T12:00:00+01:00", {
-      statObject: async (path) =>
-        path.endsWith(".mp4")
-          ? { size: 45 * 1024 * 1024, mime: "video/mp4" }
-          : { size: 200_000, mime: "image/jpeg" },
-    });
-    const result = await submitRegistration(validInput, ports);
+    expect(result.status === "invalid" && result.message).toBe(
+      "Un seul dossier est admis par personne.",
+    );
     expect(
-      result.status === "invalid" && result.fieldErrors.presentationUploadId,
+      result.status === "invalid" && result.fieldErrors.phone,
     ).toBeTruthy();
-    expect(ports.createCandidate).not.toHaveBeenCalled();
   });
 
-  it("refuse une prestation dont la durée annoncée dépasse la fenêtre", async () => {
-    const base = makePorts("2026-11-24T12:00:00+01:00");
+  it("remonte une panne du backend sans la masquer en erreur de saisie", async () => {
     const ports = makePorts("2026-11-24T12:00:00+01:00", {
-      findUploads: async (ids) => {
-        const uploads = await base.findUploads(ids);
-        return uploads.map((upload) =>
-          upload.kind === "presentation"
-            ? { ...upload, durationSeconds: 51 }
-            : upload,
-        );
+      submit: async () => {
+        throw new Error("backend indisponible");
       },
     });
-    const result = await submitRegistration(validInput, ports);
-    expect(
-      result.status === "invalid" && result.fieldErrors.presentationUploadId,
-    ).toMatch(/30 secondes maximum/);
-    expect(ports.createCandidate).not.toHaveBeenCalled();
-  });
-
-  it("refuse une prestation audio : seules les vidéos sont acceptées", async () => {
-    const ports = makePorts("2026-11-24T12:00:00+01:00", {
-      statObject: async (path) =>
-        path.endsWith(".mp4")
-          ? { size: 8_000_000, mime: "audio/mpeg" }
-          : { size: 200_000, mime: "image/jpeg" },
-    });
-    const result = await submitRegistration(validInput, ports);
-    expect(
-      result.status === "invalid" && result.fieldErrors.presentationUploadId,
-    ).toBeTruthy();
-    expect(ports.createCandidate).not.toHaveBeenCalled();
+    await expect(submitRegistration(validInput, ports)).rejects.toThrow();
   });
 });
