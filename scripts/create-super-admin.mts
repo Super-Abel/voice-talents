@@ -1,22 +1,38 @@
-// Usage : pnpm admin:create --email direction@exemple.cm --name "Direction"
+// Usage : pnpm admin:create --email jury@voicetalent.cm --role jury --name "Juré 1"
 import { randomInt } from "node:crypto";
 import { parseArgs } from "node:util";
 import { hash } from "@node-rs/argon2";
 import { createClient } from "@supabase/supabase-js";
+import {
+  ADMIN_ROLE_LABELS,
+  ADMIN_ROLES,
+  type AdminRole,
+} from "../src/features/admin-auth/domain/roles";
 
 try {
   process.loadEnvFile(".env.local");
 } catch {}
 
 const { values } = parseArgs({
-  options: { email: { type: "string" }, name: { type: "string" } },
+  options: {
+    email: { type: "string" },
+    name: { type: "string" },
+    role: { type: "string" },
+  },
 });
 const email = values.email?.trim().toLowerCase();
-const name = values.name?.trim() || "Super administrateur";
+const role = (values.role?.trim() || "super_admin") as AdminRole;
 if (!email || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
-  console.error('Usage : pnpm admin:create -- --email <e-mail> [--name "Nom"]');
+  console.error(
+    `Usage : pnpm admin:create --email <e-mail> [--role ${ADMIN_ROLES.join("|")}] [--name "Nom"]`,
+  );
   process.exit(1);
 }
+if (!ADMIN_ROLES.includes(role)) {
+  console.error(`Rôle inconnu : ${role}. Attendu : ${ADMIN_ROLES.join(", ")}.`);
+  process.exit(1);
+}
+const name = values.name?.trim() || ADMIN_ROLE_LABELS[role];
 
 const url = process.env.SUPABASE_URL;
 const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -36,7 +52,7 @@ const { data, error } = await db
   .insert({
     email,
     display_name: name,
-    role: "super_admin",
+    role,
     password_hash: await hash(password, {
       memoryCost: 19456,
       timeCost: 2,
@@ -60,10 +76,10 @@ await db.from("audit_log").insert({
   action: "admin_user.created",
   entity: "admin_user",
   entity_id: data.id,
-  after: { email, role: "super_admin", via: "seed" },
+  after: { email, role, via: "seed" },
 });
 
-console.log(`Super administrateur créé : ${email}`);
+console.log(`${ADMIN_ROLE_LABELS[role]} créé : ${email}`);
 console.log(
   `Mot de passe temporaire (à changer à la première connexion) : ${password}`,
 );
