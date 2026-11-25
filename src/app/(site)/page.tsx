@@ -810,7 +810,13 @@ function FinalCtaSection() {
       <div className="relative mx-auto max-w-4xl px-4 text-center">
         <Reveal y={36}>
           <p className="vt-chip mx-auto">
-            {formatDate("2026-11-25")} → {formatDate("2026-11-27")}
+            <Suspense
+              fallback={
+                <span className="inline-block h-4 w-56 animate-pulse rounded-md bg-night-800" />
+              }
+            >
+              <FinalCtaWindow />
+            </Suspense>
           </p>
           <h2 className="vt-kinetic mt-6 text-[clamp(2.6rem,10vw,5.5rem)] text-ink">
             Votre voix mérite
@@ -834,6 +840,16 @@ function FinalCtaSection() {
         </Reveal>
       </div>
     </section>
+  );
+}
+
+async function FinalCtaWindow() {
+  const settings = await getCachedSettings();
+  return (
+    <>
+      {formatDate(settings.registration_opens_at)} →{" "}
+      {formatDate(settings.registration_closes_at)}
+    </>
   );
 }
 
