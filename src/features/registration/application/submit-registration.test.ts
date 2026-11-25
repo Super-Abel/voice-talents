@@ -114,6 +114,28 @@ describe("submitRegistration", () => {
     expect(ports.submit).not.toHaveBeenCalled();
   });
 
+  it("refuse un dossier dont le consentement est décoché", async () => {
+    const ports = makePorts("2026-11-24T12:00:00+01:00");
+    const result = await submitRegistration(
+      { ...validInput, acceptRules: false },
+      ports,
+    );
+    expect(result.status).toBe("invalid");
+    expect(
+      result.status === "invalid" && result.fieldErrors.acceptRules,
+    ).toContain("conditions d'utilisation");
+    expect(ports.submit).not.toHaveBeenCalled();
+  });
+
+  it("refuse un dossier où le consentement est absent", async () => {
+    const ports = makePorts("2026-11-24T12:00:00+01:00");
+    const withoutConsent = { ...validInput };
+    delete (withoutConsent as Record<string, unknown>).acceptRules;
+    const result = await submitRegistration(withoutConsent, ports);
+    expect(result.status).toBe("invalid");
+    expect(ports.submit).not.toHaveBeenCalled();
+  });
+
   it("traduit un lien social refusé par le backend en erreur de champ", async () => {
     const refusal = {
       ok: false as const,
