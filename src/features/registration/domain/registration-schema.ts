@@ -82,7 +82,7 @@ export const musicFields = z.object({
 export const consentFields = z.object({
   acceptRules: z.literal(true, {
     error:
-      "Vous devez accepter le règlement et la politique de confidentialité",
+      "Vous devez accepter le règlement, les conditions d'utilisation et la politique de confidentialité",
   }),
 });
 

@@ -602,6 +602,14 @@ export function RegistrationForm({
                     className="text-flame-100 underline"
                   >
                     règlement du concours
+                  </Link>
+                  , les{" "}
+                  <Link
+                    href="/cgu"
+                    target="_blank"
+                    className="text-flame-100 underline"
+                  >
+                    conditions d'utilisation
                   </Link>{" "}
                   et la{" "}
                   <Link
