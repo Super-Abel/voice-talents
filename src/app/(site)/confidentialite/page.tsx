@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { LegalContactValue } from "@/components/site/legal-contact-value";
 import {
   LegalPage,
   LegalPlaceholder,
@@ -31,10 +32,10 @@ export default function PrivacyPage() {
             Responsable du traitement : <LegalPlaceholder />
           </li>
           <li>
-            Adresse : <LegalPlaceholder />
+            Adresse : <LegalContactValue field="address" />
           </li>
           <li>
-            E-mail de contact : <LegalPlaceholder />
+            E-mail de contact : <LegalContactValue field="email" />
           </li>
         </ul>
       </LegalSection>
@@ -122,7 +123,8 @@ export default function PrivacyPage() {
         <p>
           Vous disposez d'un droit d'accès, de rectification, d'opposition et
           d'effacement portant sur les données qui vous concernent. Ces droits
-          s'exercent par e-mail à l'adresse de contact : <LegalPlaceholder />
+          s'exercent par e-mail à l'adresse de contact :{" "}
+          <LegalContactValue field="email" />
         </p>
         <p>
           Une pièce d'identité peut être demandée afin de vérifier l'identité du

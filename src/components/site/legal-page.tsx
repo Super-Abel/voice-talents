@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 
-const LAST_UPDATED = "13 novembre 2026";
+const LAST_UPDATED = "25 novembre 2026";
 
 export function LegalPage({
   title,

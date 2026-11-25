@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { LegalContactValue } from "@/components/site/legal-contact-value";
 import {
   LegalPage,
   LegalPlaceholder,
@@ -25,7 +26,7 @@ export default function LegalNoticesPage() {
             Raison sociale : <LegalPlaceholder />
           </li>
           <li>
-            Adresse du siège social : <LegalPlaceholder />
+            Adresse du siège social : <LegalContactValue field="address" />
           </li>
           <li>
             Immatriculation (RCCM / NIU) : <LegalPlaceholder />
@@ -34,7 +35,7 @@ export default function LegalNoticesPage() {
             Directeur de la publication : <LegalPlaceholder />
           </li>
           <li>
-            E-mail de contact : <LegalPlaceholder />
+            E-mail de contact : <LegalContactValue field="email" />
           </li>
         </ul>
       </LegalSection>
@@ -99,7 +100,8 @@ export default function LegalNoticesPage() {
 
       <LegalSection title="7. Contact">
         <p>
-          Pour toute demande relative au site : <LegalPlaceholder />
+          Pour toute demande relative au site :{" "}
+          <LegalContactValue field="email" />
         </p>
       </LegalSection>
 
