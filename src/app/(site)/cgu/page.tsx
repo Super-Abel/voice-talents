@@ -6,6 +6,7 @@ import {
   LegalPlaceholder,
   LegalSection,
 } from "@/components/site/legal-page";
+import { registrationWindowSentence } from "@/features/settings/domain/date-labels";
 import { getCachedSettings } from "@/features/settings/infrastructure/settings-repository";
 
 export const metadata: Metadata = {
@@ -41,9 +42,13 @@ export default function TermsPage() {
             l'adresse e-mail utilisés doivent être uniques.
           </li>
           <li>
-            Les inscriptions sont ouvertes du 25/11/2026 à 00 h 00 au 27/11/2026
-            à 23 h 59 (heure de Douala). Aucune inscription hors délai n'est
-            acceptée.
+            <Suspense
+              fallback={
+                <span className="inline-block h-4 w-64 animate-pulse rounded-md bg-night-800" />
+              }
+            >
+              <RegistrationWindowClause />
+            </Suspense>
           </li>
           <li>
             Le candidat garantit l'exactitude des informations fournies. Toute
@@ -157,6 +162,16 @@ export default function TermsPage() {
         </p>
       </LegalSection>
     </LegalPage>
+  );
+}
+
+async function RegistrationWindowClause() {
+  const settings = await getCachedSettings();
+  return (
+    <>
+      Les inscriptions sont ouvertes {registrationWindowSentence(settings)}
+      (heure de Douala). Aucune inscription hors délai n&rsquo;est acceptée.
+    </>
   );
 }
 

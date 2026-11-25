@@ -22,6 +22,7 @@ type Props = {
   closesAt: string;
   opensLabel: string;
   closesLabel: string;
+  castingLabel: string;
   birthDateMin: string;
   birthDateMax: string;
 };
@@ -31,6 +32,7 @@ export function RegistrationGate({
   closesAt,
   opensLabel,
   closesLabel,
+  castingLabel,
   birthDateMin,
   birthDateMax,
 }: Props) {
@@ -119,6 +121,7 @@ export function RegistrationGate({
       birthDateMax={birthDateMax}
       closesAt={closesAt}
       closesLabel={closesLabel}
+      castingLabel={castingLabel}
     />
   );
 }

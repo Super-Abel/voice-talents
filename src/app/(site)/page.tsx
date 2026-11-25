@@ -12,6 +12,11 @@ import {
 } from "@/components/site/motion/stage";
 import { Ticker } from "@/components/site/motion/ticker";
 import { SectionHeading } from "@/components/site/section-heading";
+import {
+  castingDateLabel,
+  registrationWindowLabel,
+} from "@/features/settings/domain/date-labels";
+import type { SiteSettings } from "@/features/settings/domain/site-settings";
 import { getCachedSettings } from "@/features/settings/infrastructure/settings-repository";
 import { formatDate } from "@/lib/time";
 
@@ -21,15 +26,17 @@ export const metadata: Metadata = {
     "Voice Talent – Édition spéciale Douala : la compétition qui révèle les nouvelles voix du Cameroun. 40 candidats de 18 à 35 ans, de décembre 2026 à janvier 2027.",
 };
 
-const TICKER_ITEMS = [
-  "Inscriptions gratuites",
-  "25 → 27 novembre 2026",
-  "Casting en ligne 28 novembre",
-  "Lancement officiel 5 décembre",
-  "500 000 FCFA à gagner",
-  "Douala · Cameroun",
-  "Vote du public 100 FCFA",
-] as const;
+function tickerItems(settings: SiteSettings): string[] {
+  return [
+    "Inscriptions gratuites",
+    registrationWindowLabel(settings),
+    `Casting en ligne ${castingDateLabel(settings.casting_date)}`,
+    "Lancement officiel 5 décembre",
+    "500 000 FCFA à gagner",
+    "Douala · Cameroun",
+    "Vote du public 100 FCFA",
+  ];
+}
 
 const HERO_STATS = [
   { value: "40", label: "Candidats" },
@@ -38,13 +45,18 @@ const HERO_STATS = [
   { value: "500 000", label: "FCFA à gagner" },
 ] as const;
 
-const HERO_DATES = [
-  { label: "Inscriptions", value: "25 → 27 nov. 2026" },
-  { label: "Casting en ligne", value: "28 nov. 2026" },
-  { label: "Lancement", value: "5 déc. 2026" },
-  { label: "Première émission", value: "12 déc. 2026" },
-  { label: "Grande finale", value: "30 janv. 2027" },
-] as const;
+function heroDateRows(settings: SiteSettings) {
+  return [
+    { label: "Inscriptions", value: registrationWindowLabel(settings) },
+    {
+      label: "Casting en ligne",
+      value: castingDateLabel(settings.casting_date),
+    },
+    { label: "Lancement", value: "5 déc. 2026" },
+    { label: "Première émission", value: "12 déc. 2026" },
+    { label: "Grande finale", value: "30 janv. 2027" },
+  ];
+}
 
 const PHASES = [
   {
@@ -81,39 +93,49 @@ const PHASES = [
   },
 ] as const;
 
-const STEPS = [
-  {
-    n: "01",
-    title: "Je m'inscris",
-    period: "25 → 27 novembre 2026",
-    text: "Dossier gratuit en ligne : identité, photo de portrait et une vidéo de prestation.",
-  },
-  {
-    n: "02",
-    title: "Casting en ligne",
-    period: "28 novembre 2026",
-    text: "Le jury visionne les prestations et retient 40 candidats.",
-  },
-  {
-    n: "03",
-    title: "En compétition",
-    period: "Décembre 2026 → janvier 2027",
-    text: "Les émissions s'enchaînent jusqu'à la finale, et le public vote pour ses voix préférées.",
-  },
-] as const;
+function steps(settings: SiteSettings) {
+  return [
+    {
+      n: "01",
+      title: "Je m'inscris",
+      period: registrationWindowLabel(settings),
+      text: "Dossier gratuit en ligne : identité, photo de portrait et une vidéo de prestation.",
+    },
+    {
+      n: "02",
+      title: "Casting en ligne",
+      period: castingDateLabel(settings.casting_date),
+      text: "Le jury visionne les prestations et retient 40 candidats.",
+    },
+    {
+      n: "03",
+      title: "En compétition",
+      period: "Décembre 2026 → janvier 2027",
+      text: "Les émissions s'enchaînent jusqu'à la finale, et le public vote pour ses voix préférées.",
+    },
+  ];
+}
 
-const SCHEDULE = [
-  { period: "25 – 27 novembre 2026", title: "Ouverture des inscriptions" },
-  { period: "28 novembre 2026", title: "Casting en ligne" },
-  {
-    period: "5 décembre 2026",
-    title: "Cérémonie de lancement et ouverture de la billetterie",
-  },
-  { period: "12 – 27 décembre 2026", title: "Première phase · 4 émissions" },
-  { period: "3 – 9 janvier 2027", title: "Battles · 2 émissions" },
-  { period: "17 janvier 2027", title: "Demi-finale" },
-  { period: "30 janvier 2027", title: "Grande finale" },
-] as const;
+function schedule(settings: SiteSettings) {
+  return [
+    {
+      period: registrationWindowLabel(settings),
+      title: "Ouverture des inscriptions",
+    },
+    {
+      period: castingDateLabel(settings.casting_date),
+      title: "Casting en ligne",
+    },
+    {
+      period: "5 décembre 2026",
+      title: "Cérémonie de lancement et ouverture de la billetterie",
+    },
+    { period: "12 – 27 décembre 2026", title: "Première phase · 4 émissions" },
+    { period: "3 – 9 janvier 2027", title: "Battles · 2 émissions" },
+    { period: "17 janvier 2027", title: "Demi-finale" },
+    { period: "30 janvier 2027", title: "Grande finale" },
+  ];
+}
 
 const TICKETS = [
   { event: "Première phase", category: "Standard", price: 1000 },
@@ -250,15 +272,9 @@ function HeroSection() {
             </Suspense>
           </div>
           <dl className="mt-8 space-y-2.5 text-sm">
-            {HERO_DATES.map((row) => (
-              <div
-                key={row.label}
-                className="flex items-baseline justify-between gap-4 border-b border-night-800 pb-2.5 last:border-0 last:pb-0"
-              >
-                <dt className="text-muted">{row.label}</dt>
-                <dd className="font-medium text-ink">{row.value}</dd>
-              </div>
-            ))}
+            <Suspense fallback={<HeroDatesSkeleton />}>
+              <HeroDates />
+            </Suspense>
           </dl>
         </aside>
       </div>
@@ -269,7 +285,50 @@ function HeroSection() {
 function TickerBand() {
   return (
     <div className="border-b border-night-800 bg-night-900/40 py-4">
-      <Ticker items={TICKER_ITEMS} />
+      <Suspense fallback={<TickerSkeleton />}>
+        <SettingsTicker />
+      </Suspense>
+    </div>
+  );
+}
+
+function TickerSkeleton() {
+  return (
+    <div
+      className="h-7 animate-pulse rounded-md bg-night-900/70"
+      aria-hidden="true"
+    />
+  );
+}
+
+async function SettingsTicker() {
+  const settings = await getCachedSettings();
+  return <Ticker items={tickerItems(settings)} />;
+}
+
+async function HeroDates() {
+  const settings = await getCachedSettings();
+  return (
+    <>
+      {heroDateRows(settings).map((row) => (
+        <div
+          key={row.label}
+          className="flex items-baseline justify-between gap-4 border-b border-night-800 pb-2.5 last:border-0 last:pb-0"
+        >
+          <dt className="text-muted">{row.label}</dt>
+          <dd className="font-medium text-ink">{row.value}</dd>
+        </div>
+      ))}
+    </>
+  );
+}
+
+function HeroDatesSkeleton() {
+  return (
+    <div className="animate-pulse space-y-2.5" aria-hidden="true">
+      {["Inscriptions", "Casting en ligne", "Lancement"].map((label) => (
+        <div key={label} className="h-4 rounded-md bg-night-900/70" />
+      ))}
     </div>
   );
 }
@@ -410,27 +469,52 @@ function StepsSection() {
         Le parcours
       </SectionHeading>
       <ol className="grid gap-4 md:grid-cols-3">
-        {STEPS.map((step, index) => (
-          <li key={step.n} className="h-full">
-            <Reveal delay={index * 110} className="card h-full">
-              <span
-                className="font-display text-5xl leading-none text-night-600"
-                aria-hidden="true"
-              >
-                {step.n}
-              </span>
-              <h3 className="mt-3 font-display text-2xl tracking-wide">
-                {step.title}
-              </h3>
-              <p className="mt-1 text-sm font-medium text-flame-100">
-                {step.period}
-              </p>
-              <p className="mt-2 text-muted">{step.text}</p>
-            </Reveal>
-          </li>
-        ))}
+        <Suspense fallback={<StepsSkeleton />}>
+          <StepsList />
+        </Suspense>
       </ol>
     </section>
+  );
+}
+
+async function StepsList() {
+  const settings = await getCachedSettings();
+  return (
+    <>
+      {steps(settings).map((step, index) => (
+        <li key={step.n} className="h-full">
+          <Reveal delay={index * 110} className="card h-full">
+            <span
+              className="font-display text-5xl leading-none text-night-600"
+              aria-hidden="true"
+            >
+              {step.n}
+            </span>
+            <h3 className="mt-3 font-display text-2xl tracking-wide">
+              {step.title}
+            </h3>
+            <p className="mt-1 text-sm font-medium text-flame-100">
+              {step.period}
+            </p>
+            <p className="mt-2 text-muted">{step.text}</p>
+          </Reveal>
+        </li>
+      ))}
+    </>
+  );
+}
+
+function StepsSkeleton() {
+  return (
+    <>
+      {["01", "02", "03"].map((n) => (
+        <li key={n} className="card h-full animate-pulse" aria-hidden="true">
+          <div className="h-10 w-14 rounded bg-night-800" />
+          <div className="mt-3 h-6 w-44 rounded bg-night-800" />
+          <div className="mt-3 h-4 w-56 rounded bg-night-800" />
+        </li>
+      ))}
+    </>
   );
 }
 
@@ -550,25 +634,59 @@ function CalendarSection() {
           Le calendrier
         </SectionHeading>
         <ol className="border-l border-night-700 pl-6 sm:pl-8">
-          {SCHEDULE.map((item, index) => (
-            <li key={item.title} className="relative pb-7 last:pb-0">
-              <span
-                className="absolute top-1.5 -left-[31px] size-3.5 rounded-full bg-flame-300 ring-4 ring-night-950 sm:-left-[39px]"
-                aria-hidden="true"
-              />
-              <Reveal delay={index * 70} y={18}>
-                <p className="text-sm font-semibold tracking-wide text-flame-100 uppercase">
-                  {item.period}
-                </p>
-                <p className="mt-1 font-display text-2xl tracking-wide text-ink">
-                  {item.title}
-                </p>
-              </Reveal>
-            </li>
-          ))}
+          <Suspense fallback={<CalendarSkeleton />}>
+            <ScheduleList />
+          </Suspense>
         </ol>
       </div>
     </section>
+  );
+}
+
+async function ScheduleList() {
+  const settings = await getCachedSettings();
+  return (
+    <>
+      {schedule(settings).map((item, index) => (
+        <li key={item.title} className="relative pb-7 last:pb-0">
+          <span
+            className="absolute top-1.5 -left-[31px] size-3.5 rounded-full bg-flame-300 ring-4 ring-night-950 sm:-left-[39px]"
+            aria-hidden="true"
+          />
+          <Reveal delay={index * 70} y={18}>
+            <p className="text-sm font-semibold tracking-wide text-flame-100 uppercase">
+              {item.period}
+            </p>
+            <p className="mt-1 font-display text-2xl tracking-wide text-ink">
+              {item.title}
+            </p>
+          </Reveal>
+        </li>
+      ))}
+    </>
+  );
+}
+
+const CALENDAR_SKELETON_ROWS = [
+  "inscriptions",
+  "casting",
+  "lancement",
+  "phase-1",
+  "battles",
+  "demi-finale",
+  "finale",
+] as const;
+
+function CalendarSkeleton() {
+  return (
+    <>
+      {CALENDAR_SKELETON_ROWS.map((row) => (
+        <li key={row} className="relative pb-7 last:pb-0" aria-hidden="true">
+          <div className="h-4 w-40 animate-pulse rounded bg-night-800" />
+          <div className="mt-2 h-6 w-64 animate-pulse rounded bg-night-800" />
+        </li>
+      ))}
+    </>
   );
 }
 

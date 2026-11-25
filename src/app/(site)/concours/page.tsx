@@ -4,6 +4,11 @@ import { type CSSProperties, Suspense } from "react";
 import { KineticTitle } from "@/components/site/motion/kinetics";
 import { Reveal } from "@/components/site/motion/reveal";
 import { SectionHeading } from "@/components/site/section-heading";
+import {
+  castingDateLabel,
+  registrationWindowSentence,
+} from "@/features/settings/domain/date-labels";
+import type { SiteSettings } from "@/features/settings/domain/site-settings";
 import { getCachedSettings } from "@/features/settings/infrastructure/settings-repository";
 
 export const metadata: Metadata = {
@@ -60,18 +65,20 @@ const VOTE_NOTES = [
   "Les égalités sont départagées par la note du jury, puis par le nombre de votes.",
 ];
 
-const RULES = [
-  "Avoir entre 18 et 35 ans révolus à la date de clôture des inscriptions.",
-  "L'inscription est gratuite et limitée à un seul dossier par personne : le téléphone et l'adresse e-mail doivent être uniques.",
-  "Les inscriptions sont ouvertes du 25/11/2026 à 00 h 00 au 27/11/2026 à 23 h 59 (heure de Douala) ; aucune inscription hors délai n'est acceptée.",
-  "Les informations fournies doivent être exactes : toute fausse déclaration entraîne l'exclusion du candidat.",
-  "Le casting en ligne se tient le 28/11/2026 ; 40 candidats sont retenus.",
-  "La vidéo de prestation déposée à l'inscription dure de 15 à 30 secondes et pèse 40 Mo maximum ; une vidéo hors ces limites n'est pas acceptée.",
-  "Chaque candidat respecte le calendrier et les consignes de l'organisation.",
-  "Les décisions du jury sont souveraines.",
-  "L'organisation peut utiliser l'image et les prestations des candidats pour la promotion du concours.",
-  "Toute fraude au vote entraîne l'annulation des votes concernés.",
-];
+function rules(settings: SiteSettings): string[] {
+  return [
+    "Avoir entre 18 et 35 ans révolus à la date de clôture des inscriptions.",
+    "L'inscription est gratuite et limitée à un seul dossier par personne : le téléphone et l'adresse e-mail doivent être uniques.",
+    `Les inscriptions sont ouvertes ${registrationWindowSentence(settings)} (heure de Douala) ; aucune inscription hors délai n'est acceptée.`,
+    "Les informations fournies doivent être exactes : toute fausse déclaration entraîne l'exclusion du candidat.",
+    `Le casting en ligne se tient le ${castingDateLabel(settings.casting_date)} ; 40 candidats sont retenus.`,
+    "La vidéo de prestation déposée à l'inscription dure de 15 à 30 secondes et pèse 40 Mo maximum ; une vidéo hors ces limites n'est pas acceptée.",
+    "Chaque candidat respecte le calendrier et les consignes de l'organisation.",
+    "Les décisions du jury sont souveraines.",
+    "L'organisation peut utiliser l'image et les prestations des candidats pour la promotion du concours.",
+    "Toute fraude au vote entraîne l'annulation des votes concernés.",
+  ];
+}
 
 export default function ContestPage() {
   return (
@@ -238,19 +245,16 @@ export default function ContestPage() {
 
         <section id="reglement" className="vt-scene scroll-mt-24">
           <SectionHeading>Le règlement</SectionHeading>
-          <ol className="vt-panel space-y-5 p-5 sm:p-6">
-            {RULES.map((rule, index) => (
-              <li key={rule} className="flex gap-4">
-                <span
-                  aria-hidden="true"
-                  className="vt-outline font-display shrink-0 text-2xl leading-7"
-                >
-                  {String(index + 1).padStart(2, "0")}
-                </span>
-                <span className="leading-relaxed text-muted">{rule}</span>
-              </li>
-            ))}
-          </ol>
+          <Suspense
+            fallback={
+              <div
+                className="vt-panel h-64 animate-pulse space-y-5 p-5 sm:p-6"
+                aria-hidden="true"
+              />
+            }
+          >
+            <RulesList />
+          </Suspense>
           <p className="mt-4 text-sm text-muted">
             Version provisoire – le règlement officiel complet sera publié par
             l'organisation.
@@ -267,6 +271,25 @@ export default function ContestPage() {
         </Link>
       </Reveal>
     </div>
+  );
+}
+
+async function RulesList() {
+  const settings = await getCachedSettings();
+  return (
+    <ol className="vt-panel space-y-5 p-5 sm:p-6">
+      {rules(settings).map((rule, index) => (
+        <li key={rule} className="flex gap-4">
+          <span
+            aria-hidden="true"
+            className="vt-outline font-display shrink-0 text-2xl leading-7"
+          >
+            {String(index + 1).padStart(2, "0")}
+          </span>
+          <span className="leading-relaxed text-muted">{rule}</span>
+        </li>
+      ))}
+    </ol>
   );
 }
 

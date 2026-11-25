@@ -171,11 +171,13 @@ export function RegistrationForm({
   birthDateMax,
   closesAt,
   closesLabel,
+  castingLabel,
 }: {
   birthDateMin: string;
   birthDateMax: string;
   closesAt: string;
   closesLabel: string;
+  castingLabel: string;
 }) {
   const [draft, setDraft] = useState<Draft>(EMPTY_DRAFT);
   const [step, setStep] = useState(0);
@@ -268,7 +270,13 @@ export function RegistrationForm({
   }
 
   if (dossierNo)
-    return <Confirmation dossierNo={dossierNo} email={draft.email} />;
+    return (
+      <Confirmation
+        dossierNo={dossierNo}
+        email={draft.email}
+        castingLabel={castingLabel}
+      />
+    );
   if (!restored)
     return (
       <div
@@ -833,9 +841,11 @@ function Summary({
 function Confirmation({
   dossierNo,
   email,
+  castingLabel,
 }: {
   dossierNo: string;
   email: string;
+  castingLabel: string;
 }) {
   return (
     <section className="card space-y-5 text-center" aria-live="polite">
@@ -851,7 +861,7 @@ function Confirmation({
         Un e-mail de confirmation a été envoyé à {email}.
       </p>
       <p className="text-sm text-muted">
-        Le casting en ligne aura lieu le 28 novembre 2026. Vous serez informé(e)
+        Le casting en ligne aura lieu le {castingLabel}. Vous serez informé(e)
         de la suite par e-mail.
       </p>
       <Link href="/suivre-mon-dossier" className="btn-ghost">

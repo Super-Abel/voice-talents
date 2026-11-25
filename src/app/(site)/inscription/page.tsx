@@ -5,7 +5,7 @@ import { StageBeams, StageTexture } from "@/components/site/motion/stage";
 import { birthDateBounds } from "@/features/registration/domain/eligibility";
 import { RegistrationGate } from "@/features/registration/ui/registration-gate";
 import { getCachedSettings } from "@/features/settings/infrastructure/settings-repository";
-import { formatDateTime, toDoualaDate } from "@/lib/time";
+import { formatDate, formatDateTime, toDoualaDate } from "@/lib/time";
 
 export const metadata: Metadata = {
   title: "Inscription",
@@ -69,6 +69,7 @@ async function RegistrationSection() {
       closesAt={settings.registration_closes_at}
       opensLabel={formatDateTime(settings.registration_opens_at)}
       closesLabel={formatDateTime(settings.registration_closes_at)}
+      castingLabel={formatDate(`${settings.casting_date}T12:00:00+01:00`)}
       birthDateMin={bounds.min}
       birthDateMax={bounds.max}
     />
