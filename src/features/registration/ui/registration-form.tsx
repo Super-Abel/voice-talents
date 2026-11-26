@@ -502,7 +502,6 @@ export function RegistrationForm({
                 <FileUploadField
                   kind="photo"
                   label="Photo de portrait"
-                  capture="user"
                   identity={mediaIdentity}
                   value={draft.photo}
                   error={errors.photoUploadId}

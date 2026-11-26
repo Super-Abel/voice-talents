@@ -22,7 +22,6 @@ type Props = {
   onChange: (value: UploadedFile | undefined) => void;
   error?: string;
   optional?: boolean;
-  capture?: "user" | "environment";
   /** Gravé sur le média avant envoi : le backend ne garde aucun nom de fichier. */
   identity: CandidateIdentity;
 };
@@ -34,7 +33,6 @@ export function FileUploadField({
   onChange,
   error,
   optional,
-  capture,
   identity,
 }: Props) {
   const inputId = useId();
@@ -125,12 +123,12 @@ export function FileUploadField({
         data-busy={busy ? "true" : "false"}
       >
         {/* L'input natif reste posé sur toute la zone : le geste reste celui du système
-            (caméra sur mobile, dossiers récents), et le champ reste annoncé. */}
+            (galerie ou caméra sur mobile, dossiers récents sur ordinateur), et le champ
+            reste annoncé. */}
         <input
           id={inputId}
           type="file"
           accept={acceptAttribute(kind)}
-          capture={capture}
           disabled={busy}
           aria-invalid={Boolean(shownError)}
           aria-describedby={shownError ? `${inputId}-error` : undefined}
