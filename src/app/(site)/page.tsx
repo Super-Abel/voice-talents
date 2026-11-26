@@ -14,6 +14,8 @@ import { Ticker } from "@/components/site/motion/ticker";
 import { SectionHeading } from "@/components/site/section-heading";
 import {
   castingDateLabel,
+  eventDateLabel,
+  eventMonthDayLabel,
   registrationWindowLabel,
 } from "@/features/settings/domain/date-labels";
 import type { SiteSettings } from "@/features/settings/domain/site-settings";
@@ -31,7 +33,7 @@ function tickerItems(settings: SiteSettings): string[] {
     "Inscriptions gratuites",
     registrationWindowLabel(settings),
     `Casting en ligne ${castingDateLabel(settings.casting_date)}`,
-    "Lancement officiel 5 décembre",
+    `Lancement officiel ${eventMonthDayLabel(settings.launch_ceremony_at)}`,
     "500 000 FCFA à gagner",
     "Douala · Cameroun",
     "Vote du public 100 FCFA",
@@ -52,8 +54,11 @@ function heroDateRows(settings: SiteSettings) {
       label: "Casting en ligne",
       value: castingDateLabel(settings.casting_date),
     },
-    { label: "Lancement", value: "5 déc. 2026" },
-    { label: "Première émission", value: "12 déc. 2026" },
+    { label: "Lancement", value: eventDateLabel(settings.launch_ceremony_at) },
+    {
+      label: "Première émission",
+      value: eventDateLabel(settings.first_episode_at),
+    },
     { label: "Grande finale", value: "30 janv. 2027" },
   ];
 }
@@ -127,7 +132,7 @@ function schedule(settings: SiteSettings) {
       title: "Casting en ligne",
     },
     {
-      period: "5 décembre 2026",
+      period: formatDate(settings.launch_ceremony_at),
       title: "Cérémonie de lancement et ouverture de la billetterie",
     },
     { period: "12 – 27 décembre 2026", title: "Première phase · 4 émissions" },
@@ -147,23 +152,25 @@ const TICKETS = [
   { event: "Grande finale", category: "VIP Premium", price: 10000 },
 ] as const;
 
-const JURY_CARDS = [
-  {
-    role: "Jury",
-    title: "Deux voix expertes",
-    text: "Deux membres notent les prestations : 40 % du score, et 100 % lors des battles et de la finale.",
-  },
-  {
-    role: "Coach",
-    title: "Un accompagnement",
-    text: "Un coach suit les 40 candidats retenus, du premier plateau jusqu'à la grande finale.",
-  },
-  {
-    role: "Bientôt",
-    title: "Noms et photos",
-    text: "Le jury et le coach seront présentés à la cérémonie de lancement du 5 décembre 2026.",
-  },
-] as const;
+function juryCards(settings: SiteSettings) {
+  return [
+    {
+      role: "Jury",
+      title: "Deux voix expertes",
+      text: "Deux membres notent les prestations : 40 % du score, et 100 % lors des battles et de la finale.",
+    },
+    {
+      role: "Coach",
+      title: "Un accompagnement",
+      text: "Un coach suit les 40 candidats retenus, du premier plateau jusqu'à la grande finale.",
+    },
+    {
+      role: "Bientôt",
+      title: "Noms et photos",
+      text: `Le jury et le coach seront présentés à la cérémonie de lancement du ${formatDate(settings.launch_ceremony_at)}.`,
+    },
+  ];
+}
 
 /* Visuels réels de la saison précédente, repris de l'ancien site (voice-talent-bridge). */
 const PREVIOUS_FINALISTS = [
@@ -351,11 +358,11 @@ async function HeroCountdown() {
           label: "Casting en ligne dans",
         },
         {
-          at: "2026-12-05T18:00:00+01:00",
+          at: settings.launch_ceremony_at,
           label: "Cérémonie de lancement dans",
         },
         {
-          at: "2026-12-12T19:00:00+01:00",
+          at: settings.first_episode_at,
           label: "Première émission dans",
         },
       ]}
@@ -700,24 +707,53 @@ function JurySection() {
         Le jury et le coach
       </SectionHeading>
       <div className="grid gap-4 sm:grid-cols-3">
-        {JURY_CARDS.map((card, index) => (
-          <Reveal key={card.role} delay={index * 100} className="h-full">
-            <article className="card h-full">
-              <span
-                className="vt-outline font-display text-3xl uppercase"
-                aria-hidden="true"
-              >
-                {card.role}
-              </span>
-              <h3 className="mt-3 font-display text-2xl tracking-wide">
-                {card.title}
-              </h3>
-              <p className="mt-2 text-muted">{card.text}</p>
-            </article>
-          </Reveal>
-        ))}
+        <Suspense fallback={<JurySkeleton />}>
+          <JuryList />
+        </Suspense>
       </div>
     </section>
+  );
+}
+
+async function JuryList() {
+  const settings = await getCachedSettings();
+  return (
+    <>
+      {juryCards(settings).map((card, index) => (
+        <Reveal key={card.role} delay={index * 100} className="h-full">
+          <article className="card h-full">
+            <span
+              className="vt-outline font-display text-3xl uppercase"
+              aria-hidden="true"
+            >
+              {card.role}
+            </span>
+            <h3 className="mt-3 font-display text-2xl tracking-wide">
+              {card.title}
+            </h3>
+            <p className="mt-2 text-muted">{card.text}</p>
+          </article>
+        </Reveal>
+      ))}
+    </>
+  );
+}
+
+function JurySkeleton() {
+  return (
+    <>
+      {["jury", "coach", "bientot"].map((role) => (
+        <div
+          key={role}
+          className="card h-full animate-pulse"
+          aria-hidden="true"
+        >
+          <div className="h-8 w-20 rounded bg-night-800" />
+          <div className="mt-3 h-6 w-44 rounded bg-night-800" />
+          <div className="mt-2 h-4 w-full rounded bg-night-800" />
+        </div>
+      ))}
+    </>
   );
 }
 

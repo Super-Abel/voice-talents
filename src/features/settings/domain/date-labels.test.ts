@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
   castingDateLabel,
+  eventDateLabel,
+  eventMonthDayLabel,
   registrationWindowLabel,
   registrationWindowSentence,
 } from "./date-labels";
@@ -47,5 +49,25 @@ describe("registrationWindowSentence", () => {
 describe("castingDateLabel", () => {
   it("lit une date calendaire sans heure au jour voulu", () => {
     expect(castingDateLabel("2026-12-03")).toMatch(/^3 déc\. 2026$/);
+  });
+});
+
+describe("eventDateLabel", () => {
+  it("rend la date d'émission à son jour de Douala", () => {
+    expect(eventDateLabel("2026-12-19T19:00:00+01:00")).toMatch(
+      /^19 déc\. 2026$/,
+    );
+  });
+
+  it("ne décale pas d'un jour une écriture UTC en fin de soirée", () => {
+    expect(eventDateLabel("2026-12-12T23:00:00.000Z")).toMatch(
+      /^13 déc\. 2026$/,
+    );
+  });
+});
+
+describe("eventMonthDayLabel", () => {
+  it("donne le jour et le mois long pour le bandeau défilant", () => {
+    expect(eventMonthDayLabel("2026-12-12T18:00:00+01:00")).toBe("12 décembre");
   });
 });

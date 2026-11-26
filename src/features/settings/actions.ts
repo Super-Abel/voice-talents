@@ -18,6 +18,8 @@ const formSchema = z.object({
   registration_opens_at: z.string(),
   registration_closes_at: z.string(),
   casting_date: z.iso.date(),
+  launch_ceremony_at: z.string(),
+  first_episode_at: z.string(),
   age_min: int(10, 99),
   age_max: int(10, 99),
   vote_price_xaf: int(1, 100_000),
@@ -52,9 +54,16 @@ export async function saveSettings(
 
   const opensAt = doualaLocalToIso(input.registration_opens_at);
   const closesAt = doualaLocalToIso(input.registration_closes_at);
-  if (!opensAt || !closesAt) return { error: "Dates d'inscription invalides." };
+  const launchAt = doualaLocalToIso(input.launch_ceremony_at);
+  const firstEpisodeAt = doualaLocalToIso(input.first_episode_at);
+  if (!opensAt || !closesAt || !launchAt || !firstEpisodeAt)
+    return { error: "Dates d'inscription ou d'émission invalides." };
   if (opensAt >= closesAt)
     return { error: "La clôture doit être postérieure à l'ouverture." };
+  if (launchAt >= firstEpisodeAt)
+    return {
+      error: "La première émission doit suivre la cérémonie de lancement.",
+    };
   if (input.age_min > input.age_max)
     return { error: "L'âge minimum dépasse l'âge maximum." };
 
@@ -62,6 +71,8 @@ export async function saveSettings(
     registration_opens_at: opensAt,
     registration_closes_at: closesAt,
     casting_date: input.casting_date,
+    launch_ceremony_at: launchAt,
+    first_episode_at: firstEpisodeAt,
     age_min: input.age_min,
     age_max: input.age_max,
     vote_price_xaf: input.vote_price_xaf,

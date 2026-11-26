@@ -64,6 +64,23 @@ export default async function SettingsPage() {
           </div>
         </Section>
 
+        <Section title="Émissions">
+          <Field
+            label="Cérémonie de lancement"
+            name="launch_ceremony_at"
+            type="datetime-local"
+            step={1}
+            defaultValue={isoToDoualaLocal(settings.launch_ceremony_at)}
+          />
+          <Field
+            label="Première émission"
+            name="first_episode_at"
+            type="datetime-local"
+            step={1}
+            defaultValue={isoToDoualaLocal(settings.first_episode_at)}
+          />
+        </Section>
+
         <Section title="Votes et classements">
           <Field
             label="Prix d'un vote (FCFA)"

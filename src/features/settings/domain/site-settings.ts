@@ -10,6 +10,8 @@ export const siteSettingsSchema = z.object({
   registration_opens_at: z.iso.datetime({ offset: true }),
   registration_closes_at: z.iso.datetime({ offset: true }),
   casting_date: z.iso.date(),
+  launch_ceremony_at: z.iso.datetime({ offset: true }),
+  first_episode_at: z.iso.datetime({ offset: true }),
   age_min: z.number().int(),
   age_max: z.number().int(),
   vote_price_xaf: z.number().int().positive(),

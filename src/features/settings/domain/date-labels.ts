@@ -26,6 +26,12 @@ const numberedDate = new Intl.DateTimeFormat("fr-FR", {
   year: "numeric",
 });
 
+const monthDayLong = new Intl.DateTimeFormat("fr-FR", {
+  timeZone: DOUALA_TIME_ZONE,
+  day: "numeric",
+  month: "long",
+});
+
 const clock = new Intl.DateTimeFormat("fr-FR", {
   timeZone: DOUALA_TIME_ZONE,
   hour: "2-digit",
@@ -63,4 +69,14 @@ export function registrationWindowSentence(settings: Window): string {
 /** « 25 nov. 2026 » pour la date de casting saisie sans heure dans le back-office. */
 export function castingDateLabel(isoDate: string): string {
   return monthDayYear.format(calendarDate(isoDate));
+}
+
+/** « 12 déc. 2026 » pour un événement stocké en ISO avec fuseau. */
+export function eventDateLabel(value: Date | string): string {
+  return monthDayYear.format(new Date(value));
+}
+
+/** « 5 décembre » : le bandeau défilant donne le jour sans l'année. */
+export function eventMonthDayLabel(value: Date | string): string {
+  return monthDayLong.format(new Date(value));
 }
