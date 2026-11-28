@@ -611,13 +611,28 @@ function VoteSection() {
               ))}
             </ul>
             <p className="mt-5 text-sm text-muted">
-              Vente ouverte le 5 décembre 2026, le soir de la cérémonie de
-              lancement.
+              <Suspense
+                fallback={
+                  <span className="inline-block h-4 w-64 animate-pulse rounded-md bg-night-800" />
+                }
+              >
+                <TicketSalesOpening />
+              </Suspense>
             </p>
           </div>
         </Reveal>
       </div>
     </section>
+  );
+}
+
+async function TicketSalesOpening() {
+  const settings = await getCachedSettings();
+  return (
+    <>
+      Vente ouverte le {formatDate(settings.launch_ceremony_at)}, le soir de la
+      cérémonie de lancement.
+    </>
   );
 }
 
