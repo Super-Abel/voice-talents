@@ -1,6 +1,6 @@
 "use client";
 
-import { useId, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import type { CandidateIdentity } from "../domain/media-identity";
 import {
   acceptAttribute,
@@ -15,6 +15,9 @@ import { readVideoDuration } from "./video-duration";
 
 export type UploadedFile = { id: string; name: string };
 
+/** Part laissée à la préparation dans la barre : l'envoi prend le reste. */
+const PREPARATION_SHARE = 0.4;
+
 type Props = {
   kind: UploadKind;
   label: string;
@@ -24,6 +27,7 @@ type Props = {
   optional?: boolean;
   /** Gravé sur le média avant envoi : le backend ne garde aucun nom de fichier. */
   identity: CandidateIdentity;
+  onBusy?: (busy: boolean) => void;
 };
 
 export function FileUploadField({
@@ -34,38 +38,57 @@ export function FileUploadField({
   error,
   optional,
   identity,
+  onBusy,
 }: Props) {
   const inputId = useId();
-  const [stage, setStage] = useState<"preparing" | "uploading" | null>(null);
+  const [sending, setSending] = useState(false);
   const [ratio, setRatio] = useState(0);
   const [pendingName, setPendingName] = useState("");
   const [localError, setLocalError] = useState<string>();
+  const sendingRef = useRef(false);
+  const onBusyRef = useRef(onBusy);
+
+  useEffect(() => {
+    onBusyRef.current = onBusy;
+  });
+
+  useEffect(
+    () => () => {
+      /* Un champ retiré pendant l'envoi ne doit pas laisser le formulaire à
+         attendre un fichier qui n'existe plus. */
+      if (sendingRef.current) onBusyRef.current?.(false);
+    },
+    [],
+  );
+
+  function setBusy(next: boolean) {
+    sendingRef.current = next;
+    setSending(next);
+    onBusyRef.current?.(next);
+  }
 
   async function handleFile(file: File | undefined) {
     if (!file) return;
     setLocalError(undefined);
     setPendingName(file.name);
-    /* La préparation (compression + identifiant) se fait dans l'appareil : elle
-       occupe le même couloir visuel que l'envoi pour ne jamais laisser le
-       candidat sans nouvelle. */
-    setStage("preparing");
+    setBusy(true);
     setRatio(0);
     const { file: prepared, unreadable } = await prepareMedia(
       kind,
       file,
       identity,
-      setRatio,
+      (progress) => setRatio(progress * PREPARATION_SHARE),
     );
     /* Un fichier que cet appareil ne décode pas ne sera pas jugé : mieux vaut
        le dire avant l'envoi qu'après, quand le dossier est déjà fermé. */
     if (unreadable) {
-      setStage(null);
+      setBusy(false);
       setLocalError(UPLOAD_RULES[kind].unreadableHint);
       return;
     }
     const problem = validateUpload(kind, prepared.type, prepared.size);
     if (problem) {
-      setStage(null);
+      setBusy(false);
       setLocalError(problem);
       return;
     }
@@ -76,18 +99,19 @@ export function FileUploadField({
       durationSeconds = await readVideoDuration(prepared);
       const durationProblem = validateUploadDuration(kind, durationSeconds);
       if (durationProblem) {
-        setStage(null);
+        setBusy(false);
         setLocalError(durationProblem);
         return;
       }
     }
-    setStage("uploading");
-    setRatio(0);
     try {
       const id = await uploadRegistrationFile(
         kind,
         prepared,
-        setRatio,
+        (progress) =>
+          setRatio(
+            PREPARATION_SHARE + progress * (1 - PREPARATION_SHARE) * 0.98,
+          ),
         durationSeconds ? Math.round(durationSeconds) : undefined,
       );
       onChange({ id, name: file.name });
@@ -98,13 +122,12 @@ export function FileUploadField({
           : "Envoi impossible. Réessayez.",
       );
     } finally {
-      setStage(null);
+      setBusy(false);
     }
   }
 
   const shownError = localError ?? error;
-  const busy = stage !== null;
-  const preparing = stage === "preparing";
+  const busy = sending;
   const percent = Math.round(ratio * 100);
 
   return (
@@ -136,13 +159,7 @@ export function FileUploadField({
         />
 
         <span className="vt-dropzone-fake" aria-hidden="true">
-          {busy
-            ? preparing
-              ? "Compression"
-              : "Envoi"
-            : value
-              ? "Remplacer"
-              : "Choisir"}
+          {busy ? "Envoi" : value ? "Remplacer" : "Choisir"}
         </span>
 
         <span className="min-w-0 flex-1">
@@ -173,10 +190,7 @@ export function FileUploadField({
 
       {busy ? (
         <p className="field-hint" aria-live="polite">
-          {preparing
-            ? "Préparation du fichier sur votre appareil… "
-            : "Envoi en cours… "}
-          {percent} %
+          Envoi en cours… {percent} %
         </p>
       ) : null}
       {shownError && (

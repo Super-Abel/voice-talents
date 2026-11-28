@@ -1,7 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { type ReactNode, useEffect, useId, useRef, useState } from "react";
+import {
+  type ReactNode,
+  useCallback,
+  useEffect,
+  useId,
+  useRef,
+  useState,
+} from "react";
 import type { z } from "zod";
 import { Countdown } from "@/components/countdown";
 import {
@@ -187,6 +194,19 @@ export function RegistrationForm({
   const [submitting, setSubmitting] = useState(false);
   const [dossierNo, setDossierNo] = useState<string>();
   const [turnstileToken, setTurnstileToken] = useState<string>();
+  /* Un média choisi est en route vers le serveur pendant que le candidat
+     remplit le reste : seul le bouton d'étape doit l'attendre. */
+  const [mediaBusy, setMediaBusy] = useState({
+    photo: false,
+    presentation: false,
+  });
+  const reportMediaBusy = useCallback(
+    (kind: "photo" | "presentation", busy: boolean) =>
+      setMediaBusy((current) =>
+        current[kind] === busy ? current : { ...current, [kind]: busy },
+      ),
+    [],
+  );
   const honeypot = useRef<HTMLInputElement>(null);
   const headingRef = useRef<HTMLHeadingElement>(null);
 
@@ -286,6 +306,9 @@ export function RegistrationForm({
     );
 
   const isLast = step === STEPS.length - 1;
+  /* Le numéro d'envoi n'existe qu'une fois l'octet arrivé : valider l'étape
+     pendant le transfert renverrait « champ requis » sur un fichier déjà choisi. */
+  const waitingMedia = mediaBusy.photo || mediaBusy.presentation;
   /* Identifiant gravé sur la photo et la vidéo avant l'envoi : le dossier
      n'a pas encore de numéro à ce moment, le nom et le téléphone restent les
      seuls repères que le back-office sait retrouver. */
@@ -506,6 +529,7 @@ export function RegistrationForm({
                   value={draft.photo}
                   error={errors.photoUploadId}
                   onChange={(v) => update("photo", v)}
+                  onBusy={(b) => reportMediaBusy("photo", b)}
                 />
               </div>
             </div>
@@ -552,6 +576,7 @@ export function RegistrationForm({
                   value={draft.presentation}
                   error={errors.presentationUploadId}
                   onChange={(v) => update("presentation", v)}
+                  onBusy={(b) => reportMediaBusy("presentation", b)}
                 />
               </div>
 
@@ -650,12 +675,18 @@ export function RegistrationForm({
           ) : (
             <span />
           )}
-          <button type="submit" className="btn-flame" disabled={submitting}>
-            {isLast
-              ? submitting
-                ? "Envoi en cours…"
-                : "Envoyer mon inscription"
-              : "Continuer"}
+          <button
+            type="submit"
+            className="btn-flame"
+            disabled={submitting || waitingMedia}
+          >
+            {waitingMedia
+              ? "Envoi de ton fichier…"
+              : isLast
+                ? submitting
+                  ? "Envoi en cours…"
+                  : "Envoyer mon inscription"
+                : "Continuer"}
           </button>
         </div>
         <p className="text-xs text-muted">
