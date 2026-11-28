@@ -73,11 +73,12 @@ export function FileUploadField({
     setPendingName(file.name);
     setBusy(true);
     setRatio(0);
-    const { file: prepared, unreadable } = await prepareMedia(
-      kind,
-      file,
-      identity,
-      (progress) => setRatio(progress * PREPARATION_SHARE),
+    const {
+      file: prepared,
+      unreadable,
+      durationSeconds: probedDuration,
+    } = await prepareMedia(kind, file, identity, (progress) =>
+      setRatio(progress * PREPARATION_SHARE),
     );
     /* Un fichier que cet appareil ne décode pas ne sera pas jugé : mieux vaut
        le dire avant l'envoi qu'après, quand le dossier est déjà fermé. */
@@ -92,11 +93,12 @@ export function FileUploadField({
       setLocalError(problem);
       return;
     }
-    /* La durée est lue dans le fichier avant tout octet envoyé : un candidat
-       en 3G ne paie pas l'upload d'une vidéo déjà hors critères. */
+    /* La durée est connue avant tout octet envoyé : un candidat en 3G ne paie
+       pas l'upload d'une vidéo déjà hors critères. Le transcodage la rend, on
+       ne rouvre pas le fichier pour la redemander au décodeur. */
     let durationSeconds: number | null = null;
     if (UPLOAD_RULES[kind].maxDurationSeconds) {
-      durationSeconds = await readVideoDuration(prepared);
+      durationSeconds = probedDuration ?? (await readVideoDuration(prepared));
       const durationProblem = validateUploadDuration(kind, durationSeconds);
       if (durationProblem) {
         setBusy(false);
@@ -155,7 +157,14 @@ export function FileUploadField({
           disabled={busy}
           aria-invalid={Boolean(shownError)}
           aria-describedby={shownError ? `${inputId}-error` : undefined}
-          onChange={(event) => void handleFile(event.target.files?.[0])}
+          onChange={(event) => {
+            const input = event.target;
+            const chosen = input.files?.[0];
+            /* Vide la sélection : sans ça, retirer puis reprendre le même
+               fichier ne déclenche aucun événement et le champ reste vide. */
+            input.value = "";
+            void handleFile(chosen);
+          }}
         />
 
         <span className="vt-dropzone-fake" aria-hidden="true">
